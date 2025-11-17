@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using D2.Model;
 using D2.UI.Services;
 
 namespace D2.UI.ViewModels;
@@ -78,7 +79,11 @@ public partial class LoadCharacterViewModel : ViewModelBase
 
         settingsService.SaveSelectedCharacter(CharacterName);
         ErrorMessage = null;
-        mainWindowViewModel.NavigateTo(new CharacterInformationViewModel(settingsService, mainWindowViewModel));
+
+        var path = settingsService.GetSaveGamePath();
+        var characterFullPath = Path.Combine(path!, $"{CharacterName}.d2s");
+        var characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader());
+        mainWindowViewModel.NavigateTo(new CharacterInformationViewModel(mainWindowViewModel, characterDataLoader));
     }
 
     [RelayCommand]
@@ -87,7 +92,11 @@ public partial class LoadCharacterViewModel : ViewModelBase
         CharacterName = characterName;
         settingsService.SaveSelectedCharacter(characterName);
         ErrorMessage = null;
-        mainWindowViewModel.NavigateTo(new CharacterInformationViewModel(settingsService, mainWindowViewModel));
+
+        var path = settingsService.GetSaveGamePath();
+        var characterFullPath = Path.Combine(path!, $"{characterName}.d2s");
+        var characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader());
+        mainWindowViewModel.NavigateTo(new CharacterInformationViewModel(mainWindowViewModel, characterDataLoader));
     }
 
     [RelayCommand]

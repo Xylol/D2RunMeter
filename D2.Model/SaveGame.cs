@@ -19,7 +19,7 @@ public class SaveGame
                 GetGfBooleans()).ToArray());
     }
 
-    public string GetSubstringStartingWithAsciiGF()
+    public string GetSubstringStartingWithAsciiGf()
     {
         var gfAsBools = ConvertContent.GetLsbBoolArraysFromByteWideInts(this.gfCharactersAsHex);
         var gfConcatedBools = ConvertContent.GetLesserDimensionBoolArray(gfAsBools).ToArray();
@@ -28,7 +28,7 @@ public class SaveGame
 
         var reveresedBoolsAsText = ConvertContent.GetStringRepresentation(this.reveresedAllBools);
 
-        var indexOfGandF = reveresedBoolsAsText.IndexOf(gfAsText);
+        var indexOfGandF = reveresedBoolsAsText.IndexOf(gfAsText, StringComparison.Ordinal);
         var result = reveresedBoolsAsText.Substring(indexOfGandF);
 
         return result;
@@ -37,112 +37,39 @@ public class SaveGame
     public Character GetPlayerCharacter()
     {
         var parsedText = Parser.ParseGfValuesFromText(this.gfPartAsText);
-
-        var characterName = GetName();
-        var characterStrength = 0;
-        var characterEnergy = 0;
-        var characterDexterity = 0;
-        var characterVitality = 0;
-        var characterStatusLeft = 0;
-        var characterSkillLeft = 0;
-        var characterLife = 0;
-        var characterLifeMax = 0;
-        var characterMana = 0;
-        var characterManaMax = 0;
-        var characterStamina = 0;
-        var characterStaminaMax = 0;
-        var characterLevel = 0;
-        var characterExperience = 0L;
-        var characterGoldInventory = 0;
-        var characterGoldStash = 0;
+        var stats = new Dictionary<string, long>();
 
         foreach (var pair in parsedText)
         {
-            var transformedValue =
-                ConvertContent.GetLongFromLittleEndianBools(ConvertContent.GetBools(pair.Value).ToArray());
-
-            switch (pair.Key)
-            {
-                case "000000000":
-                    characterStrength = (int)transformedValue;
-                    break;
-                case "100000000":
-                    characterEnergy = (int)transformedValue;
-                    break;
-                case "010000000":
-                    characterDexterity = (int)transformedValue;
-                    break;
-                case "110000000":
-                    characterVitality = (int)transformedValue;
-                    break;
-                case "001000000":
-                    characterStatusLeft = (int)transformedValue;
-                    break;
-                case "101000000":
-                    characterSkillLeft = (int)transformedValue;
-                    break;
-                case "011000000":
-                    characterLife = (int)transformedValue / 256;
-                    break;
-                case "111000000":
-                    characterLifeMax = (int)transformedValue / 256;
-                    break;
-                case "000100000":
-                    characterMana = (int)transformedValue / 256;
-                    break;
-                case "100100000":
-                    characterManaMax = (int)transformedValue / 256;
-                    break;
-                case "010100000":
-                    characterStamina = (int)transformedValue / 256;
-                    break;
-                case "110100000":
-                    characterStaminaMax = (int)transformedValue / 256;
-                    break;
-                case "001100000":
-                    characterLevel = (int)transformedValue;
-                    break;
-                case "101100000":
-                    characterExperience = transformedValue;
-                    break;
-                case "011100000":
-                    characterGoldInventory = (int)transformedValue;
-                    break;
-                case "111100000":
-                    characterGoldStash = (int)transformedValue;
-                    break;
-            }
+            var value = ConvertContent.GetLongFromLittleEndianBools(
+                ConvertContent.GetBools(pair.Value).ToArray());
+            stats[pair.Key] = value;
         }
+        var level = (int)stats.GetValueOrDefault("001100000", 0);
 
-        var characterExperienceRequiredForCurrentLevel = GetRequiredExperienceForLevel(characterLevel);
-
-        var nextLevel = characterLevel + 1;
-        var characterNextLevelAtExperience = GetRequiredExperienceForLevel(nextLevel);
-
-        var character = new Character
+        return new Character
         {
-            Name = characterName,
+            Name = GetName(),
             LastChangedAt = changedDate,
-            Level = characterLevel,
-            Experience = characterExperience,
-            NextLevelAtExperience = characterNextLevelAtExperience,
-            ExperienceRequiredForCurrentLevel = characterExperienceRequiredForCurrentLevel,
-            GoldInventory = characterGoldInventory,
-            GoldStash = characterGoldStash,
-            Strength = characterStrength,
-            Dexterity = characterDexterity,
-            Vitality = characterVitality,
-            Energy = characterEnergy,
-            StatusLeft = characterStatusLeft,
-            Life = characterLife,
-            LifeMax = characterLifeMax,
-            Stamina = characterStamina,
-            StaminaMax = characterStaminaMax,
-            Mana = characterMana,
-            ManaMax = characterManaMax,
-            SkillLeft = characterSkillLeft 
+            Level = level,
+            Experience = stats.GetValueOrDefault("101100000", 0),
+            NextLevelAtExperience = GetRequiredExperienceForLevel(level + 1),
+            ExperienceRequiredForCurrentLevel = GetRequiredExperienceForLevel(level),
+            Strength = (int)stats.GetValueOrDefault("000000000", 0),
+            Energy = (int)stats.GetValueOrDefault("100000000", 0),
+            Dexterity = (int)stats.GetValueOrDefault("010000000", 0),
+            Vitality = (int)stats.GetValueOrDefault("110000000", 0),
+            StatusLeft = (int)stats.GetValueOrDefault("001000000", 0),
+            SkillLeft = (int)stats.GetValueOrDefault("101000000", 0),
+            Life = (int)stats.GetValueOrDefault("011000000", 0) / 256,
+            LifeMax = (int)stats.GetValueOrDefault("111000000", 0) / 256,
+            Mana = (int)stats.GetValueOrDefault("000100000", 0) / 256,
+            ManaMax = (int)stats.GetValueOrDefault("100100000", 0) / 256,
+            Stamina = (int)stats.GetValueOrDefault("010100000", 0) / 256,
+            StaminaMax = (int)stats.GetValueOrDefault("110100000", 0) / 256,
+            GoldInventory = (int)stats.GetValueOrDefault("011100000", 0),
+            GoldStash = (int)stats.GetValueOrDefault("111100000", 0)
         };
-        return character;
     }
 
     private long GetRequiredExperienceForLevel(int currentLevel)
@@ -159,7 +86,7 @@ public class SaveGame
 
     private bool[] GetGfBooleans()
     {
-        var gfBitsText = GetSubstringStartingWithAsciiGF();
+        var gfBitsText = GetSubstringStartingWithAsciiGf();
         var gfBooleans = ConvertContent.GetBools(gfBitsText).ToArray();
         return gfBooleans;
     }

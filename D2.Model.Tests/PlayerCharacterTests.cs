@@ -106,7 +106,7 @@ public class PlayerCharacterTests
         var saveGame = new SaveGame(this.craftedSaveGameContent, changedDate);
 
         // Act
-        var actual = saveGame.GetSubstringStartingWithAsciiGF();
+        var actual = saveGame.GetSubstringStartingWithAsciiGf();
 
         // Assert
         ClassicAssert.AreEqual(expected, actual);

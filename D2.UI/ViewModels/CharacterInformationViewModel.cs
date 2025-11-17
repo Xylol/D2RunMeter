@@ -8,7 +8,6 @@ namespace D2.UI.ViewModels;
 
 public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
 {
-    private readonly SettingsService settingsService;
     private readonly MainWindowViewModel mainWindowViewModel;
     private readonly CharacterDataLoader characterDataLoader;
     private Character characterData;
@@ -55,21 +54,10 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string levelUpRunsEta = string.Empty;
 
-    public CharacterInformationViewModel(SettingsService settingsService, MainWindowViewModel mainWindowViewModel)
+    public CharacterInformationViewModel(MainWindowViewModel mainWindowViewModel, CharacterDataLoader characterDataLoader)
     {
-        this.settingsService = settingsService;
         this.mainWindowViewModel = mainWindowViewModel;
-
-        var path = settingsService.GetSaveGamePath();
-        var chosenCharacter = settingsService.GetSelectedCharacter();
-
-        if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(chosenCharacter))
-        {
-            throw new InvalidOperationException("Path or character not set");
-        }
-
-        var characterFullPath = Path.Combine(path, $"{chosenCharacter}.d2s");
-        this.characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader());
+        this.characterDataLoader = characterDataLoader;
         this.characterData = this.characterDataLoader.GetCurrentCharacterData();
 
         this.characterName = this.characterData.Name;
@@ -206,7 +194,7 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Back()
     {
-        mainWindowViewModel.NavigateTo(new MainMenuViewModel(settingsService, mainWindowViewModel));
+        mainWindowViewModel.NavigateToMainMenu();
     }
 
     public void Dispose()
