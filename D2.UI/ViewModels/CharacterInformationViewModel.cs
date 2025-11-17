@@ -22,6 +22,7 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     private int runCounter;
     private readonly List<long> expOfRuns = [];
     private DateTime previousChangedAt;
+    private DateTime lastKnownFileTimestamp;
     private CancellationTokenSource? cancellationTokenSource;
 
     [ObservableProperty]
@@ -66,6 +67,7 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
         this.previousExperience = this.characterData.Experience;
         this.previousGold = GetGold();
         this.previousChangedAt = this.characterData.LastChangedAt;
+        this.lastKnownFileTimestamp = this.characterDataLoader.GetLastWriteTime();
 
         StartMonitoring();
     }
@@ -84,7 +86,14 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                this.characterData = this.characterDataLoader.GetCurrentCharacterData();
+                var currentFileTimestamp = this.characterDataLoader.GetLastWriteTime();
+
+                if (currentFileTimestamp != this.lastKnownFileTimestamp)
+                {
+                    this.characterData = this.characterDataLoader.GetCurrentCharacterData();
+                    this.lastKnownFileTimestamp = currentFileTimestamp;
+                }
+
                 var currentExperience = this.characterData.Experience;
                 var currentGold = GetGold();
                 var currentLastChangedAt = this.characterData.LastChangedAt;
@@ -167,7 +176,6 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
         this.goldHistory.Add(currentGold - this.previousGold);
         this.previousGold = currentGold;
 
-        // Limit history size to prevent unbounded memory growth
         if (this.experienceHistory.Count > MaxHistorySize)
         {
             this.experienceHistory.RemoveAt(0);

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using D2.Model.Helper;
 
 namespace D2.Model;
@@ -9,6 +10,7 @@ public class SaveGame
     private readonly string gfPartAsText;
     private readonly DateTime changedDate;
     private readonly bool[] reveresedAllBools;
+    private static Dictionary<int, long>? levelExperienceCache;
 
     public SaveGame(byte[] fileContent, DateTime changedDate)
     {
@@ -74,14 +76,37 @@ public class SaveGame
 
     private long GetRequiredExperienceForLevel(int currentLevel)
     {
+        if (levelExperienceCache == null)
+        {
+            LoadLevelExperienceMappingFromEmbeddedResource();
+        }
+
+        return levelExperienceCache![currentLevel];
+    }
+
+    private static void LoadLevelExperienceMappingFromEmbeddedResource()
+    {
         const int countOfHeaderRows = 1;
-        var linesFromLevelExperienceMapping = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-            "LevelExperienceMapping.ssv"));
-        var levelExperienceDictionary = linesFromLevelExperienceMapping.Skip(countOfHeaderRows)
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = "D2.Model.LevelExperienceMapping.ssv";
+
+        using var stream = assembly.GetManifestResourceStream(resourceName)
+            ?? throw new Exception($"Embedded resource '{resourceName}' not found");
+        using var reader = new StreamReader(stream);
+
+        var lines = new List<string>();
+        while (!reader.EndOfStream)
+        {
+            var line = reader.ReadLine();
+            if (line != null)
+            {
+                lines.Add(line);
+            }
+        }
+
+        levelExperienceCache = lines.Skip(countOfHeaderRows)
             .Select(line => line.Split(';'))
             .ToDictionary(level => int.Parse(level[0]), experience => long.Parse(experience[1]));
-        var minimumExperienceForLevel = levelExperienceDictionary[currentLevel];
-        return minimumExperienceForLevel;
     }
 
     private bool[] GetGfBooleans()

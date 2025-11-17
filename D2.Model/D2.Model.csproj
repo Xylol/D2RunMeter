@@ -7,13 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="LevelExperienceMapping.ssv" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="LevelExperienceMapping.ssv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="LevelExperienceMapping.ssv" />
   </ItemGroup>
 
 </Project>

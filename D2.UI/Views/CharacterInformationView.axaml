@@ -79,7 +79,7 @@
                        HorizontalAlignment="Center"
                        Margin="{StaticResource MarginVerticalSmall}"/>
 
-            <Button Content="Back"
+            <Button Content="Reset &amp; Main Menu"
                     Command="{Binding BackCommand}"
                     Classes="MenuButton"
                     Margin="{StaticResource MarginTopMedium}"/>
