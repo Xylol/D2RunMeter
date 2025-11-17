@@ -4,6 +4,8 @@ public class CharacterDataLoader(string characterLocation, IContentLoader conten
 {
     private const int MaximumLoadingAttempts = 10;
 
+    public string CharacterFilePath => characterLocation;
+
     public DateTime GetLastWriteTime()
     {
         return ContentLoader.GetLastWriteTime(characterLocation);

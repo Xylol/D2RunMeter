@@ -26,8 +26,29 @@
             <!-- Stats Cards -->
             <Border Classes="StatsCard">
                 <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Level Up Progress"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpProgress}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
                     <TextBlock Grid.Row="0" Classes="Label" Text="Level Up ETA"/>
                     <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpEta}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Runs ETA"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpRunsEta}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Runs / Hour"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding RunsPerHour}"/>
                 </Grid>
             </Border>
 
@@ -47,8 +68,8 @@
 
             <Border Classes="StatsCard">
                 <Grid RowDefinitions="Auto,Auto">
-                    <TextBlock Grid.Row="0" Classes="Label" Text="Level Up Progress"/>
-                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpProgress}"/>
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Session Time"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding SessionTimer}"/>
                 </Grid>
             </Border>
 
@@ -56,20 +77,6 @@
                 <Grid RowDefinitions="Auto,Auto">
                     <TextBlock Grid.Row="0" Classes="Label" Text="Runs"/>
                     <TextBlock Grid.Row="1" Classes="Value" Text="{Binding Runs}"/>
-                </Grid>
-            </Border>
-
-            <Border Classes="StatsCard">
-                <Grid RowDefinitions="Auto,Auto">
-                    <TextBlock Grid.Row="0" Classes="Label" Text="Runs ETA"/>
-                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpRunsEta}"/>
-                </Grid>
-            </Border>
-
-            <Border Classes="StatsCard">
-                <Grid RowDefinitions="Auto,Auto">
-                    <TextBlock Grid.Row="0" Classes="Label" Text="Session Time"/>
-                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding SessionTimer}"/>
                 </Grid>
             </Border>
 
