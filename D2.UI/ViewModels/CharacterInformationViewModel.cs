@@ -2,7 +2,6 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using D2.Model;
-using D2.UI.Services;
 
 namespace D2.UI.ViewModels;
 
@@ -11,22 +10,22 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     private readonly MainWindowViewModel mainWindowViewModel;
     private readonly CharacterDataLoader characterDataLoader;
     private Character characterData;
-    private readonly List<long> experienceHistory = [];
-    private readonly List<long> goldHistory = [];
-    private const int MaxHistorySize = 3600; // Keep max 1 hour of history
-    private long previousExperience;
-    private long previousGold;
-    private const int TimeBetweenCharacterRefreshInSeconds = 1;
     private readonly DateTime sessionStartedAt = DateTime.Now;
-    private const double OneHourInSeconds = 3600.0;
+    private readonly long sessionStartExp;
+    private readonly long sessionStartGold;
+    private long previousExperience;
+    private const int FallbackPollingIntervalInSeconds = 10;
     private int runCounter;
     private readonly List<long> expOfRuns = [];
+    private const int MaxRunHistorySize = 1000;
     private DateTime previousChangedAt;
     private DateTime lastKnownFileTimestamp;
     private CancellationTokenSource? cancellationTokenSource;
+    private FileSystemWatcher? fileWatcher;
+    private readonly object updateLock = new();
 
     [ObservableProperty]
-    private string characterName = string.Empty;
+    private string characterName;
 
     [ObservableProperty]
     private int characterLevel;
@@ -55,6 +54,9 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string levelUpRunsEta = string.Empty;
 
+    [ObservableProperty]
+    private string runsPerHour = string.Empty;
+
     public CharacterInformationViewModel(MainWindowViewModel mainWindowViewModel, CharacterDataLoader characterDataLoader)
     {
         this.mainWindowViewModel = mainWindowViewModel;
@@ -64,8 +66,9 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
         this.characterName = this.characterData.Name;
         this.characterLevel = this.characterData.Level;
 
-        this.previousExperience = this.characterData.Experience;
-        this.previousGold = GetGold();
+        this.sessionStartExp = this.characterData.Experience;
+        this.sessionStartGold = GetGold();
+        this.previousExperience = this.sessionStartExp;
         this.previousChangedAt = this.characterData.LastChangedAt;
         this.lastKnownFileTimestamp = this.characterDataLoader.GetLastWriteTime();
 
@@ -75,73 +78,163 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     private void StartMonitoring()
     {
         cancellationTokenSource = new CancellationTokenSource();
+
+        try
+        {
+            SetupFileSystemWatcher();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"WARNING: FileSystemWatcher setup failed: {ex.Message}. Using polling fallback only.");
+        }
+
         Task.Run(async () => await MonitorCharacterAsync(cancellationTokenSource.Token));
     }
 
-    private async Task MonitorCharacterAsync(CancellationToken cancellationToken)
+    private void SetupFileSystemWatcher()
     {
-        var updateCounter = 0;
+        var filePath = this.characterDataLoader.CharacterFilePath;
+        var directory = Path.GetDirectoryName(filePath);
+        var fileName = Path.GetFileName(filePath);
 
-        while (!cancellationToken.IsCancellationRequested)
+        if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(fileName))
+        {
+            throw new ArgumentException("Invalid file path for FileSystemWatcher");
+        }
+
+        fileWatcher = new FileSystemWatcher(directory)
+        {
+            Filter = fileName,
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+            EnableRaisingEvents = true
+        };
+
+        fileWatcher.Changed += OnFileChanged;
+        fileWatcher.Error += OnFileWatcherError;
+    }
+
+    private void OnFileChanged(object sender, FileSystemEventArgs e)
+    {
+        // Trigger immediate check (will be debounced by timestamp check)
+        Task.Run(() => CheckForUpdates());
+    }
+
+    private void OnFileWatcherError(object sender, ErrorEventArgs e)
+    {
+        Console.WriteLine($"WARNING: FileSystemWatcher error: {e.GetException().Message}. Relying on polling fallback.");
+    }
+
+    private void CheckForUpdates()
+    {
+        bool runDetected = false;
+
+        lock (updateLock)
         {
             try
             {
                 var currentFileTimestamp = this.characterDataLoader.GetLastWriteTime();
 
+                // Only reload if file actually changed (debouncing)
                 if (currentFileTimestamp != this.lastKnownFileTimestamp)
                 {
                     this.characterData = this.characterDataLoader.GetCurrentCharacterData();
                     this.lastKnownFileTimestamp = currentFileTimestamp;
-                }
 
-                var currentExperience = this.characterData.Experience;
-                var currentGold = GetGold();
-                var currentLastChangedAt = this.characterData.LastChangedAt;
+                    var currentExperience = this.characterData.Experience;
+                    var currentLastChangedAt = this.characterData.LastChangedAt;
 
-                if (currentLastChangedAt > this.previousChangedAt)
-                {
-                    this.runCounter++;
-                    this.expOfRuns.Add(currentExperience - this.previousExperience);
-                    this.previousChangedAt = currentLastChangedAt;
-                }
-
-                UpdateHistory(currentExperience, currentGold);
-
-                var currentGoldPerHour = GetCurrentGoldPerHour();
-                var currentExperiencePerHour = GetCurrentExperiencePerHour();
-                var experienceThresholdForLevelUp = this.characterData.NextLevelAtExperience;
-                var experienceDelta = experienceThresholdForLevelUp - currentExperience;
-
-                double hoursForLevelUp = 999999999;
-                double runsForLevelUp = 999999999;
-                if (currentExperiencePerHour > 0)
-                {
-                    hoursForLevelUp = experienceDelta / currentExperiencePerHour;
-                    if (this.expOfRuns.Count > 0)
+                    // Detect run completion
+                    if (currentLastChangedAt > this.previousChangedAt)
                     {
-                        runsForLevelUp = experienceDelta / this.expOfRuns.Average();
+                        this.runCounter++;
+                        this.expOfRuns.Add(currentExperience - this.previousExperience);
+                        this.previousExperience = currentExperience;
+                        this.previousChangedAt = currentLastChangedAt;
+
+                        // Prevent unbounded list growth
+                        if (this.expOfRuns.Count > MaxRunHistorySize)
+                        {
+                            this.expOfRuns.RemoveAt(0);
+                        }
+
+                        runDetected = true;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR: Error checking for updates: {ex.Message}");
+            }
+        }
 
-                if (updateCounter % 5 == 0)
+        // Trigger immediate UI update if run was detected
+        if (runDetected)
+        {
+            UpdateUI();
+        }
+    }
+
+    private void UpdateUI()
+    {
+        try
+        {
+            var currentExperience = this.characterData.Experience;
+            var currentGold = GetGold();
+            var now = DateTime.Now;
+
+            var currentGoldPerHour = SessionStatsCalculator.CalculateGoldPerHour(
+                currentGold, this.sessionStartGold, this.sessionStartedAt, now);
+            var currentExperiencePerHour = SessionStatsCalculator.CalculateExperiencePerHour(
+                currentExperience, this.sessionStartExp, this.sessionStartedAt, now);
+
+            var hoursForLevelUp = SessionStatsCalculator.CalculateHoursForLevelUp(
+                currentExperience, this.characterData.NextLevelAtExperience, currentExperiencePerHour);
+            var runsForLevelUp = SessionStatsCalculator.CalculateRunsForLevelUp(
+                currentExperience, this.sessionStartExp, this.characterData.NextLevelAtExperience, this.runCounter);
+            var progressForLevelUp = SessionStatsCalculator.CalculateLevelUpProgressPercentage(
+                currentExperience, this.characterData.ExperienceRequiredForCurrentLevel, this.characterData.NextLevelAtExperience);
+            var sessionMinutes = SessionStatsCalculator.CalculateSessionMinutes(this.sessionStartedAt, now);
+            var currentRunsPerHour = SessionStatsCalculator.CalculateRunsPerHour(this.runCounter, this.sessionStartedAt, now);
+
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CurrentDateTime = now.ToString("yyyy-MM-dd HH:mm:ss");
+                LevelUpEta = hoursForLevelUp > 999999 ? "N/A" : ReadabilityHelper.ConvertToHoursAndMinutesText(hoursForLevelUp);
+                ExpPerHour = ReadabilityHelper.ConvertToSi(currentExperiencePerHour);
+                GoldPerHour = ReadabilityHelper.ConvertToSi(currentGoldPerHour);
+                LevelUpProgress = $"{progressForLevelUp:0.00}%";
+                SessionTimer = $"{sessionMinutes:0}m";
+                Runs = this.runCounter;
+                LevelUpRunsEta = runsForLevelUp > 999999 ? "N/A" : $"{runsForLevelUp:0}";
+                RunsPerHour = $"{currentRunsPerHour:0.0}";
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: Error updating UI: {ex.Message}");
+        }
+    }
+
+    private async Task MonitorCharacterAsync(CancellationToken cancellationToken)
+    {
+        var uiUpdateCounter = 0;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                // Check for updates (called every 10s as fallback)
+                CheckForUpdates();
+
+                // Update UI every 2 iterations (20 seconds) for regular clock/timer updates
+                if (uiUpdateCounter % 2 == 0)
                 {
-                    // Marshal UI updates to the UI thread
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        CurrentDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        LevelUpEta = ReadabilityHelper.ConvertToHoursAndMinutesText(hoursForLevelUp);
-                        ExpPerHour = ReadabilityHelper.ConvertToSi(currentExperiencePerHour);
-                        GoldPerHour = ReadabilityHelper.ConvertToSi(currentGoldPerHour);
-                        LevelUpProgress = $"{CalculateLvlUpProgressPercentage():0.00}%";
-                        SessionTimer = $"{(DateTime.Now - this.sessionStartedAt).TotalMinutes:0}m";
-                        Runs = this.runCounter;
-                        LevelUpRunsEta = $"{runsForLevelUp:0}";
-                    });
+                    UpdateUI();
                 }
 
-                updateCounter++;
+                uiUpdateCounter++;
 
-                await Task.Delay(TimeBetweenCharacterRefreshInSeconds * 1000, cancellationToken);
+                await Task.Delay(FallbackPollingIntervalInSeconds * 1000, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -154,50 +247,7 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private double GetCurrentExperiencePerHour()
-    {
-        if (experienceHistory.Count == 0) return 0;
-        var result = this.experienceHistory.Average() * (OneHourInSeconds / TimeBetweenCharacterRefreshInSeconds);
-        return result;
-    }
-
-    private double GetCurrentGoldPerHour()
-    {
-        if (goldHistory.Count == 0) return 0;
-        var result = this.goldHistory.Average() * (OneHourInSeconds / TimeBetweenCharacterRefreshInSeconds);
-        return result;
-    }
-
-    private void UpdateHistory(long currentExperience, long currentGold)
-    {
-        this.experienceHistory.Add(currentExperience - this.previousExperience);
-        this.previousExperience = currentExperience;
-
-        this.goldHistory.Add(currentGold - this.previousGold);
-        this.previousGold = currentGold;
-
-        if (this.experienceHistory.Count > MaxHistorySize)
-        {
-            this.experienceHistory.RemoveAt(0);
-        }
-        if (this.goldHistory.Count > MaxHistorySize)
-        {
-            this.goldHistory.RemoveAt(0);
-        }
-    }
-
     private long GetGold() => this.characterData.GoldInventory + this.characterData.GoldStash;
-
-    private double CalculateLvlUpProgressPercentage()
-    {
-        var currentExp = this.characterData.Experience;
-        var thresholdCurrentLevel = this.characterData.ExperienceRequiredForCurrentLevel;
-        var thresholdNextLevel = this.characterData.NextLevelAtExperience;
-        var differenceBetweenTresholds = thresholdNextLevel - thresholdCurrentLevel;
-        if (differenceBetweenTresholds == 0) return 0;
-        double experienceCollectedOnThisLevel = currentExp - thresholdCurrentLevel;
-        return (experienceCollectedOnThisLevel / differenceBetweenTresholds) * 100;
-    }
 
     [RelayCommand]
     private void Back()
@@ -209,5 +259,13 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     {
         cancellationTokenSource?.Cancel();
         cancellationTokenSource?.Dispose();
+
+        if (fileWatcher != null)
+        {
+            fileWatcher.EnableRaisingEvents = false;
+            fileWatcher.Changed -= OnFileChanged;
+            fileWatcher.Error -= OnFileWatcherError;
+            fileWatcher.Dispose();
+        }
     }
 }
