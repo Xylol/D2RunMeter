@@ -1,5 +1,3 @@
-using System;
-
 namespace D2.Model
 {
     public static class ReadabilityHelper

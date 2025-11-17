@@ -1,44 +1,33 @@
-using System;
-using System.Threading;
-
 namespace D2.Model
 {
-    public class CharacterDataLoader
+    public class CharacterDataLoader(string characterLocation, IContentLoader contentLoader, IParser parser)
     {
-        private readonly ContentLoader contentLoader;
-        private readonly Parser parser;
-        private readonly string characterLocation;
-        private int countOfChangedDataAfterRead;
-        private const int MaximumRetriesAfterChangedData = 10;
-
-        public CharacterDataLoader(string characterLocation)
-        {
-            this.countOfChangedDataAfterRead = 0;
-            this.contentLoader = new ContentLoader();
-            this.parser = new Parser();
-            this.characterLocation = characterLocation;
-        }
+        private const int MaximumLoadingAttempts = 10;
 
         public Character GetCurrentCharacterData()
         {
-            var changedDate = this.contentLoader.GetLastWriteTime(this.characterLocation);
-            var fileContent = this.contentLoader.GetSaveGameContent(this.characterLocation);
-            var changedDateAfterLoading = this.contentLoader.GetLastWriteTime(this.characterLocation);
-
-            if (changedDate == changedDateAfterLoading)
+            var attemptCounter = 0;
+            while (true)
             {
-                this.countOfChangedDataAfterRead = 0;
-                return new SaveGame(fileContent, this.parser, changedDate).GetPlayerCharacter();
-            }
+                attemptCounter++;
+                
+                var updatedAt = ContentLoader.GetLastWriteTime(characterLocation);
+                var fileContent = contentLoader.GetSaveGameContent(characterLocation);
+                var updatedAtAfterLoadingFileContent = ContentLoader.GetLastWriteTime(characterLocation);
 
-            this.countOfChangedDataAfterRead++;
+                if (updatedAt == updatedAtAfterLoadingFileContent)
+                {
+                    return new SaveGame(fileContent, parser, updatedAt).GetPlayerCharacter();
+                }
 
-            if (this.countOfChangedDataAfterRead < MaximumRetriesAfterChangedData)
-            {
-                Thread.Sleep(100);
-                GetCurrentCharacterData();
+                if (attemptCounter < MaximumLoadingAttempts)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
+                throw new Exception("Character was changed too fast between loads. This should not happen.");
             }
-            throw new Exception("Character was changed to fast between loads. This should not happen.");
         }
     }
 }

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
 namespace D2.UI.Services
 {
     public class SaveGameHelperService
@@ -13,12 +8,12 @@ namespace D2.UI.Services
             {
                 if (string.IsNullOrWhiteSpace(pathToSaveGames))
                 {
-                    return new List<string>();
+                    return [];
                 }
 
                 if (!Directory.Exists(pathToSaveGames))
                 {
-                    return new List<string>();
+                    return [];
                 }
 
                 var directoryInfo = new DirectoryInfo(pathToSaveGames);
@@ -35,7 +30,7 @@ namespace D2.UI.Services
             }
             catch (Exception)
             {
-                return new List<string>();
+                return [];
             }
         }
     }

@@ -1,16 +1,14 @@
-using System;
-using System.IO;
 using System.Text.Json;
 
 namespace D2.UI.Services
 {
-    public class BaseSettings
+    public record BaseSettings
     {
-        public string? SelectedCharacter { get; set; }
-        public string? SaveGamePath { get; set; }
-        public bool IsAlwaysOnTop { get; set; }
-        public double WindowWidth { get; set; } = 320;
-        public double WindowHeight { get; set; } = 600;
+        public string? SelectedCharacter { get; init; }
+        public string? SaveGamePath { get; init; }
+        public bool IsAlwaysOnTop { get; init; }
+        public double WindowWidth { get; init; } = 320;
+        public double WindowHeight { get; init; } = 600;
     }
 
     public class SettingsService
@@ -70,24 +68,24 @@ namespace D2.UI.Services
         public void SaveSelectedCharacter(string lastLoadedCharacter)
         {
             var currentSettings = LoadBaseSettings();
-            currentSettings.SelectedCharacter = lastLoadedCharacter;
-            var serializedSettings = JsonSerializer.Serialize(currentSettings);
+            var updatedSettings = currentSettings with { SelectedCharacter = lastLoadedCharacter };
+            var serializedSettings = JsonSerializer.Serialize(updatedSettings);
             File.WriteAllText(this.settingsFilePath, serializedSettings);
         }
 
         public void SaveSaveGamePath(string saveGamePath)
         {
             var currentSettings = LoadBaseSettings();
-            currentSettings.SaveGamePath = saveGamePath;
-            var serializedSettings = JsonSerializer.Serialize(currentSettings);
+            var updatedSettings = currentSettings with { SaveGamePath = saveGamePath };
+            var serializedSettings = JsonSerializer.Serialize(updatedSettings);
             File.WriteAllText(this.settingsFilePath, serializedSettings);
         }
 
         public void SaveIsAlwaysOnTop(bool isAlwaysOnTop)
         {
             var currentSettings = LoadBaseSettings();
-            currentSettings.IsAlwaysOnTop = isAlwaysOnTop;
-            var serializedSettings = JsonSerializer.Serialize(currentSettings);
+            var updatedSettings = currentSettings with { IsAlwaysOnTop = isAlwaysOnTop };
+            var serializedSettings = JsonSerializer.Serialize(updatedSettings);
             File.WriteAllText(this.settingsFilePath, serializedSettings);
         }
 
@@ -100,9 +98,8 @@ namespace D2.UI.Services
         public void SaveWindowDimensions(double width, double height)
         {
             var currentSettings = LoadBaseSettings();
-            currentSettings.WindowWidth = width;
-            currentSettings.WindowHeight = height;
-            var serializedSettings = JsonSerializer.Serialize(currentSettings);
+            var updatedSettings = currentSettings with { WindowWidth = width, WindowHeight = height };
+            var serializedSettings = JsonSerializer.Serialize(updatedSettings);
             File.WriteAllText(this.settingsFilePath, serializedSettings);
         }
     }

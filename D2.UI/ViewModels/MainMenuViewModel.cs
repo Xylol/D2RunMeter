@@ -1,25 +1,16 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using D2.UI.Services;
 
 namespace D2.UI.ViewModels
 {
-    public partial class MainMenuViewModel : ViewModelBase
+    public partial class MainMenuViewModel(
+        SettingsService settingsService,
+        MainWindowViewModel mainWindowViewModel)
+        : ViewModelBase
     {
-        private readonly SettingsService settingsService;
-        private readonly MainWindowViewModel mainWindowViewModel;
-
         [ObservableProperty]
         private int selectedIndex = 0;
-
-        public MainMenuViewModel(
-            SettingsService settingsService,
-            MainWindowViewModel mainWindowViewModel)
-        {
-            this.settingsService = settingsService;
-            this.mainWindowViewModel = mainWindowViewModel;
-        }
 
         [RelayCommand]
         public void ExecuteSelected()

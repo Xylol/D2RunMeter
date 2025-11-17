@@ -1,5 +1,4 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using FluentAssertions;
 
@@ -8,10 +7,10 @@ namespace D2.Model.Tests
     [TestFixture]
     public class PlayerCharacterTests
     {
-        private byte[] saveGameContent;
-        private byte[] craftedSaveGameContent;
-        private byte[] rasanSaveGameContent;
-        private IParser parser;
+        private byte[] saveGameContent = null!;
+        private byte[] craftedSaveGameContent = null!;
+        private byte[] rasanSaveGameContent = null!;
+        private IParser parser = null!;
 
         [SetUp]
         public void SetUp()

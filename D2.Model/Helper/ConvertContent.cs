@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 
 namespace D2.Model.Helper
 {
@@ -92,7 +89,7 @@ namespace D2.Model.Helper
             var result = new List<bool[]>();
             foreach (var single in input)
             {
-                result.Add(GetBools(new[] {Convert.ToByte(single)}).ToArray());
+                result.Add(GetBools([Convert.ToByte(single)]).ToArray());
             }
             return result;
         }
@@ -115,10 +112,7 @@ namespace D2.Model.Helper
 
         public static IEnumerable<bool> ReverseBitOrderForEachEightElementPack(bool[] originalOrderBools)
         {
-            if (originalOrderBools == null)
-            {
-                return null;
-            }
+            ArgumentNullException.ThrowIfNull(originalOrderBools);
 
             if (originalOrderBools.Length % BitsPerByte != 0)
             {
@@ -170,8 +164,10 @@ namespace D2.Model.Helper
                 }
 
                 yield return result.ToArray();
-                result = new List<bool>();
-                result.Add(element);
+                result =
+                [
+                    element
+                ];
             }
 
             while (result.Count != BitsPerByte)
