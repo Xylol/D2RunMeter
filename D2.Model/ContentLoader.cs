@@ -6,11 +6,11 @@ public class ContentLoader : IContentLoader
     {
         var fileInfo = new FileInfo(fullPathToFileOnDisk);
 
-        // wait if file is empty
+        // wait if file is empty (D2 might still be writing)
         if (fileInfo.Length == 0)
         {
-            Console.WriteLine("DEBUG: FileInfo length was 0, waiting 500ms");
-            Thread.Sleep(500);
+            Console.WriteLine("DEBUG: FileInfo length was 0, waiting 1000ms");
+            Thread.Sleep(1000);
         }
 
         using var saveGameStream =
