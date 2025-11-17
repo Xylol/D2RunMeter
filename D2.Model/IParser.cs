@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace D2.Model
+﻿namespace D2.Model
 {
     public interface IParser
     {

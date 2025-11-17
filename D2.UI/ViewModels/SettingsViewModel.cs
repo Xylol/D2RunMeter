@@ -1,23 +1,13 @@
-using System;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using D2.UI.Services;
 
 namespace D2.UI.ViewModels
 {
-    public partial class SettingsViewModel : ViewModelBase
+    public partial class SettingsViewModel(
+        SettingsService settingsService,
+        MainWindowViewModel mainWindowViewModel)
+        : ViewModelBase
     {
-        private readonly SettingsService settingsService;
-        private readonly MainWindowViewModel mainWindowViewModel;
-
-        public SettingsViewModel(
-            SettingsService settingsService,
-            MainWindowViewModel mainWindowViewModel)
-        {
-            this.settingsService = settingsService;
-            this.mainWindowViewModel = mainWindowViewModel;
-        }
-
         public bool IsAlwaysOnTop
         {
             get => mainWindowViewModel.IsAlwaysOnTop;

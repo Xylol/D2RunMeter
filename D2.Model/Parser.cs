@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace D2.Model
+﻿namespace D2.Model
 {
     public class Parser : IParser
     {
         public bool[] GetValuesForSingleToken(bool[] input, ParserToken parserToken)
         {
-            var resultLookup = GetParsedValuesFrom(input, new[] {parserToken});
+            var resultLookup = GetParsedValuesFrom(input, [parserToken]);
             var result = resultLookup.Values.Single();
             return result;
         }

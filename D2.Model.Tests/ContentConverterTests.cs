@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using D2.Model.Helper;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -13,7 +10,7 @@ namespace D2.Model.Tests
         [TestFixture]
         public class GetInformations
         {
-            private byte[] craftedSaveGame;
+            private byte[] craftedSaveGame = null!;
 
             [SetUp]
             public void GetHeaderBytesFromFile()
@@ -106,8 +103,8 @@ namespace D2.Model.Tests
                 }; // 1111 0000 0110 01
                 var expected = new List<bool[]>
                 {
-                    {new[] {true, true, true, true, false, false, false, false}},
-                    {new[] {false, true, true, false, false, true, false, false}}
+                    { [true, true, true, true, false, false, false, false] },
+                    { [false, true, true, false, false, true, false, false] }
                 };
 
                 // Act
@@ -128,8 +125,8 @@ namespace D2.Model.Tests
                 }; // 1111 0000 0110 0101
                 var expected = new List<bool[]>
                 {
-                    {new[] {true, true, true, true, false, false, false, false}},
-                    {new[] {false, true, true, false, false, true, false, true}}
+                    { [true, true, true, true, false, false, false, false] },
+                    { [false, true, true, false, false, true, false, true] }
                 };
 
                 // Act
@@ -208,7 +205,7 @@ namespace D2.Model.Tests
                 var expected = new[] {false, true, true, false, false, true, true, true}; //0110 0111
 
                 // Act
-                var actual = ConvertContent.GetLsbBoolArraysFromByteWideInts(new []{input});
+                var actual = ConvertContent.GetLsbBoolArraysFromByteWideInts([input]);
                 var actualConcated = ConvertContent.GetLesserDimensionBoolArray(actual).ToArray();
                 var reversedActual = ConvertContent.ReverseBitOrderForEachEightElementPack(actualConcated);
 

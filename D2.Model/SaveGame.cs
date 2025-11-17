@@ -1,14 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using D2.Model.Helper;
 
 namespace D2.Model
 {
     public class SaveGame
     {
-        private readonly int[] gfCharactersAsHex = {0x67, 0x66};
+        private readonly int[] gfCharactersAsHex = [0x67, 0x66];
         private readonly string gfPartAsText;
         private readonly IParser parser;
         private readonly DateTime changedDate;
@@ -142,7 +139,7 @@ namespace D2.Model
             var nameNumberes = ConvertContent.GetNumbersFromMSB(input);
             var nameBytes = nameNumberes.Select(n => BitConverter.GetBytes(n).First()).ToArray();
             var nameString = Encoding.ASCII.GetString(nameBytes).Trim('\0');
-            return nameString;
+            return nameString ?? throw  new Exception("Name is null");
         }
     }
 }

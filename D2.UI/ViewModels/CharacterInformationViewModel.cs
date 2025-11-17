@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,8 +12,8 @@ namespace D2.UI.ViewModels
         private readonly MainWindowViewModel mainWindowViewModel;
         private readonly CharacterDataLoader characterDataLoader;
         private Character characterData;
-        private readonly List<long> experienceHistory = new();
-        private readonly List<long> goldHistory = new();
+        private readonly List<long> experienceHistory = [];
+        private readonly List<long> goldHistory = [];
         private const int MaxHistorySize = 3600; // Keep max 1 hour of history
         private long previousExperience;
         private long previousGold;
@@ -27,7 +21,7 @@ namespace D2.UI.ViewModels
         private readonly DateTime sessionStartedAt = DateTime.Now;
         private const double OneHourInSeconds = 3600.0;
         private int runCounter;
-        private readonly List<long> expOfRuns = new();
+        private readonly List<long> expOfRuns = [];
         private DateTime previousChangedAt;
         private CancellationTokenSource? cancellationTokenSource;
 
@@ -75,7 +69,7 @@ namespace D2.UI.ViewModels
             }
 
             var characterFullPath = Path.Combine(path, $"{chosenCharacter}.d2s");
-            this.characterDataLoader = new CharacterDataLoader(characterFullPath);
+            this.characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader(), new Parser());
             this.characterData = this.characterDataLoader.GetCurrentCharacterData();
 
             this.characterName = this.characterData.Name;
@@ -96,17 +90,17 @@ namespace D2.UI.ViewModels
 
         private async Task MonitorCharacterAsync(CancellationToken cancellationToken)
         {
-            int updateCounter = 0;
+            var updateCounter = 0;
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     this.characterData = this.characterDataLoader.GetCurrentCharacterData();
-
                     var currentExperience = this.characterData.Experience;
-
+                    var currentGold = GetGold();
                     var currentLastChangedAt = this.characterData.LastChangedAt;
+
                     if (currentLastChangedAt > this.previousChangedAt)
                     {
                         this.runCounter++;
@@ -114,13 +108,11 @@ namespace D2.UI.ViewModels
                         this.previousChangedAt = currentLastChangedAt;
                     }
 
-                    var currentGold = GetGold();
-
                     UpdateHistory(currentExperience, currentGold);
 
                     var currentGoldPerHour = GetCurrentGoldPerHour();
-                    var experienceThresholdForLevelUp = this.characterData.NextLevelAtExperience;
                     var currentExperiencePerHour = GetCurrentExperiencePerHour();
+                    var experienceThresholdForLevelUp = this.characterData.NextLevelAtExperience;
                     var experienceDelta = experienceThresholdForLevelUp - currentExperience;
 
                     double hoursForLevelUp = 999999999;
@@ -158,9 +150,9 @@ namespace D2.UI.ViewModels
                 {
                     break;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Ignore errors during monitoring
+                    Console.WriteLine($"ERROR: Error during character monitoring: {ex.Message}");
                 }
             }
         }

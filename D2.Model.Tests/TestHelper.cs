@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace D2.Model.Tests
 {
@@ -7,12 +6,8 @@ namespace D2.Model.Tests
     {
         public static Stream ResourceStream(string resourceName)
         {
-            return Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-        }
-
-        public static string[] ResourceNames()
-        {
-            return Assembly.GetExecutingAssembly().GetManifestResourceNames();
+            var result = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            return result ?? throw new NullReferenceException($"Resource '{resourceName}' not found");
         }
     }
 }

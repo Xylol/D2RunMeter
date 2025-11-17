@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace D2.Model
+﻿namespace D2.Model
 {
     public class Character
     {
-        public string Name { get; set; }
-        public string Title { get; set; }
-        public string GameType { get; set; }
-        public string Game { get; set; }
-        public string Class { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? GameType { get; set; }
+        public string? Game { get; set; }
+        public string? Class { get; set; }
         public DateTime LastChangedAt { get; set; }
 
         public int Level { get; set; }

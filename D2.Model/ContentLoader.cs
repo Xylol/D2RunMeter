@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-
-namespace D2.Model
+﻿namespace D2.Model
 {
     public class ContentLoader : IContentLoader
     {
@@ -17,19 +13,17 @@ namespace D2.Model
                 Thread.Sleep(500);
             }
 
-            using (var saveGameStream =
+            using var saveGameStream =
                 new FileStream(
                     fullPathToFileOnDisk,
                     FileMode.Open,
                     FileAccess.Read,
-                    FileShare.ReadWrite))
-            {
-                var contentFromStream = GetSaveGameContent(saveGameStream);
-                return contentFromStream;
-            }
+                    FileShare.ReadWrite);
+            var contentFromStream = GetSaveGameContent(saveGameStream);
+            return contentFromStream;
         }
 
-        public DateTime GetLastWriteTime(string fullPathToFileOnDisk)
+        public static DateTime GetLastWriteTime(string fullPathToFileOnDisk)
         {
             var fileInfo = new FileInfo(fullPathToFileOnDisk);
             var lastWriteTime = fileInfo.LastWriteTime;
@@ -38,11 +32,9 @@ namespace D2.Model
 
         public byte[] GetSaveGameContent(Stream saveGameFileStream)
         {
-            using (var tmpMemoryStream = new MemoryStream())
-            {
-                saveGameFileStream.CopyTo(tmpMemoryStream);
-                return tmpMemoryStream.ToArray();
-            }
+            using var tmpMemoryStream = new MemoryStream();
+            saveGameFileStream.CopyTo(tmpMemoryStream);
+            return tmpMemoryStream.ToArray();
         }
     }
 }

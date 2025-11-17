@@ -5,6 +5,8 @@
     <RootNamespace>D2.Model.Tests</RootNamespace>
     <AssemblyName>D2.Model.Tests</AssemblyName>
     <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>

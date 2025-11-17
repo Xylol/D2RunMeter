@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using D2.UI.Services;
@@ -22,7 +19,7 @@ namespace D2.UI.ViewModels
         private string? currentCharacter;
 
         [ObservableProperty]
-        private List<string> availableCharacters = new();
+        private List<string> availableCharacters = [];
 
         public List<string> FilteredCharacters
         {

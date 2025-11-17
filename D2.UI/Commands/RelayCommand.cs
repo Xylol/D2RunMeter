@@ -1,18 +1,10 @@
-using System;
 using System.Windows.Input;
 
 namespace D2.UI.Commands
 {
-    public class RelayCommand : ICommand
+    public class RelayCommand(Action execute, Func<bool>? canExecute = null) : ICommand
     {
-        private readonly Action execute;
-        private readonly Func<bool>? canExecute;
-
-        public RelayCommand(Action execute, Func<bool>? canExecute = null)
-        {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
-        }
+        private readonly Action execute = execute ?? throw new ArgumentNullException(nameof(execute));
 
         public event EventHandler? CanExecuteChanged;
 
@@ -23,16 +15,9 @@ namespace D2.UI.Commands
         public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public class RelayCommand<T> : ICommand
+    public class RelayCommand<T>(Action<T?> execute, Func<T?, bool>? canExecute = null) : ICommand
     {
-        private readonly Action<T?> execute;
-        private readonly Func<T?, bool>? canExecute;
-
-        public RelayCommand(Action<T?> execute, Func<T?, bool>? canExecute = null)
-        {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
-        }
+        private readonly Action<T?> execute = execute ?? throw new ArgumentNullException(nameof(execute));
 
         public event EventHandler? CanExecuteChanged;
 

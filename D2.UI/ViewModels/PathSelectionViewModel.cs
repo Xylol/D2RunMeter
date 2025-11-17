@@ -1,16 +1,14 @@
-using System;
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using D2.UI.Services;
 
 namespace D2.UI.ViewModels
 {
-    public partial class PathSelectionViewModel : ViewModelBase
+    public partial class PathSelectionViewModel(
+        SettingsService settingsService,
+        MainWindowViewModel mainWindowViewModel)
+        : ViewModelBase
     {
-        private readonly SettingsService settingsService;
-        private readonly MainWindowViewModel mainWindowViewModel;
-
         [ObservableProperty]
         private string? pathInput;
 
@@ -18,14 +16,7 @@ namespace D2.UI.ViewModels
         private string? errorMessage;
 
         [ObservableProperty]
-        private string? currentPath;
-
-        public PathSelectionViewModel(SettingsService settingsService, MainWindowViewModel mainWindowViewModel)
-        {
-            this.settingsService = settingsService;
-            this.mainWindowViewModel = mainWindowViewModel;
-            this.currentPath = settingsService.GetSaveGamePath();
-        }
+        private string? currentPath = settingsService.GetSaveGamePath();
 
         [RelayCommand]
         private void SavePath()
