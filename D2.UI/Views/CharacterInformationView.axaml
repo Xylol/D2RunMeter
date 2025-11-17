@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:D2.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="D2.UI.Views.CharacterInformationView"
+             x:DataType="vm:CharacterInformationViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="{StaticResource MarginContainer}"
+                    Spacing="{StaticResource SpacingTiny}">
+
+            <!-- Character Header -->
+            <Border BorderBrush="{DynamicResource SystemAccentColor}"
+                    BorderThickness="0,0,0,2"
+                    Padding="{StaticResource MarginBottomSmall}"
+                    Margin="{StaticResource MarginBottomSmall}">
+                <TextBlock Classes="Title">
+                    <Run Text="{Binding CharacterName}"/>
+                    <Run Text=" Lvl "/>
+                    <Run Text="{Binding CharacterLevel}"/>
+                </TextBlock>
+            </Border>
+
+            <!-- Stats Cards -->
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Level Up ETA"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpEta}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Experience / Hour"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding ExpPerHour}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Gold / Hour"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding GoldPerHour}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Level Up Progress"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpProgress}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Runs"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding Runs}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Runs ETA"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding LevelUpRunsEta}"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="StatsCard">
+                <Grid RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="Label" Text="Session Time"/>
+                    <TextBlock Grid.Row="1" Classes="Value" Text="{Binding SessionTimer}"/>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="{Binding CurrentDateTime}"
+                       FontSize="{StaticResource FontSizeSmall}"
+                       Opacity="0.5"
+                       HorizontalAlignment="Center"
+                       Margin="{StaticResource MarginVerticalSmall}"/>
+
+            <Button Content="Back"
+                    Command="{Binding BackCommand}"
+                    Classes="MenuButton"
+                    Margin="{StaticResource MarginTopMedium}"/>
+        </StackPanel>
+    </ScrollViewer>
+
+</UserControl>

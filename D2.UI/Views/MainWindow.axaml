@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:D2.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="600"
+        x:Class="D2.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="D2RunMeter"
+        Width="320" Height="600"
+        CanResize="True"
+        MinWidth="200"
+        MinHeight="400"
+        WindowStartupLocation="CenterScreen"
+        RenderOptions.BitmapInterpolationMode="HighQuality"
+        Topmost="{Binding IsAlwaysOnTop, Mode=TwoWay}">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <ContentControl Content="{Binding CurrentViewModel}" />
+
+</Window>
