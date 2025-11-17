@@ -4,215 +4,214 @@ using CommunityToolkit.Mvvm.Input;
 using D2.Model;
 using D2.UI.Services;
 
-namespace D2.UI.ViewModels
+namespace D2.UI.ViewModels;
+
+public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
 {
-    public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
+    private readonly SettingsService settingsService;
+    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly CharacterDataLoader characterDataLoader;
+    private Character characterData;
+    private readonly List<long> experienceHistory = [];
+    private readonly List<long> goldHistory = [];
+    private const int MaxHistorySize = 3600; // Keep max 1 hour of history
+    private long previousExperience;
+    private long previousGold;
+    private const int TimeBetweenCharacterRefreshInSeconds = 1;
+    private readonly DateTime sessionStartedAt = DateTime.Now;
+    private const double OneHourInSeconds = 3600.0;
+    private int runCounter;
+    private readonly List<long> expOfRuns = [];
+    private DateTime previousChangedAt;
+    private CancellationTokenSource? cancellationTokenSource;
+
+    [ObservableProperty]
+    private string characterName = string.Empty;
+
+    [ObservableProperty]
+    private int characterLevel;
+
+    [ObservableProperty]
+    private string currentDateTime = string.Empty;
+
+    [ObservableProperty]
+    private string levelUpEta = string.Empty;
+
+    [ObservableProperty]
+    private string expPerHour = string.Empty;
+
+    [ObservableProperty]
+    private string goldPerHour = string.Empty;
+
+    [ObservableProperty]
+    private string levelUpProgress = string.Empty;
+
+    [ObservableProperty]
+    private string sessionTimer = string.Empty;
+
+    [ObservableProperty]
+    private int runs;
+
+    [ObservableProperty]
+    private string levelUpRunsEta = string.Empty;
+
+    public CharacterInformationViewModel(SettingsService settingsService, MainWindowViewModel mainWindowViewModel)
     {
-        private readonly SettingsService settingsService;
-        private readonly MainWindowViewModel mainWindowViewModel;
-        private readonly CharacterDataLoader characterDataLoader;
-        private Character characterData;
-        private readonly List<long> experienceHistory = [];
-        private readonly List<long> goldHistory = [];
-        private const int MaxHistorySize = 3600; // Keep max 1 hour of history
-        private long previousExperience;
-        private long previousGold;
-        private const int TimeBetweenCharacterRefreshInSeconds = 1;
-        private readonly DateTime sessionStartedAt = DateTime.Now;
-        private const double OneHourInSeconds = 3600.0;
-        private int runCounter;
-        private readonly List<long> expOfRuns = [];
-        private DateTime previousChangedAt;
-        private CancellationTokenSource? cancellationTokenSource;
+        this.settingsService = settingsService;
+        this.mainWindowViewModel = mainWindowViewModel;
 
-        [ObservableProperty]
-        private string characterName = string.Empty;
+        var path = settingsService.GetSaveGamePath();
+        var chosenCharacter = settingsService.GetSelectedCharacter();
 
-        [ObservableProperty]
-        private int characterLevel;
-
-        [ObservableProperty]
-        private string currentDateTime = string.Empty;
-
-        [ObservableProperty]
-        private string levelUpEta = string.Empty;
-
-        [ObservableProperty]
-        private string expPerHour = string.Empty;
-
-        [ObservableProperty]
-        private string goldPerHour = string.Empty;
-
-        [ObservableProperty]
-        private string levelUpProgress = string.Empty;
-
-        [ObservableProperty]
-        private string sessionTimer = string.Empty;
-
-        [ObservableProperty]
-        private int runs;
-
-        [ObservableProperty]
-        private string levelUpRunsEta = string.Empty;
-
-        public CharacterInformationViewModel(SettingsService settingsService, MainWindowViewModel mainWindowViewModel)
+        if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(chosenCharacter))
         {
-            this.settingsService = settingsService;
-            this.mainWindowViewModel = mainWindowViewModel;
-
-            var path = settingsService.GetSaveGamePath();
-            var chosenCharacter = settingsService.GetSelectedCharacter();
-
-            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(chosenCharacter))
-            {
-                throw new InvalidOperationException("Path or character not set");
-            }
-
-            var characterFullPath = Path.Combine(path, $"{chosenCharacter}.d2s");
-            this.characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader(), new Parser());
-            this.characterData = this.characterDataLoader.GetCurrentCharacterData();
-
-            this.characterName = this.characterData.Name;
-            this.characterLevel = this.characterData.Level;
-
-            this.previousExperience = this.characterData.Experience;
-            this.previousGold = GetGold();
-            this.previousChangedAt = this.characterData.LastChangedAt;
-
-            StartMonitoring();
+            throw new InvalidOperationException("Path or character not set");
         }
 
-        private void StartMonitoring()
-        {
-            cancellationTokenSource = new CancellationTokenSource();
-            Task.Run(async () => await MonitorCharacterAsync(cancellationTokenSource.Token));
-        }
+        var characterFullPath = Path.Combine(path, $"{chosenCharacter}.d2s");
+        this.characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader());
+        this.characterData = this.characterDataLoader.GetCurrentCharacterData();
 
-        private async Task MonitorCharacterAsync(CancellationToken cancellationToken)
-        {
-            var updateCounter = 0;
+        this.characterName = this.characterData.Name;
+        this.characterLevel = this.characterData.Level;
 
-            while (!cancellationToken.IsCancellationRequested)
+        this.previousExperience = this.characterData.Experience;
+        this.previousGold = GetGold();
+        this.previousChangedAt = this.characterData.LastChangedAt;
+
+        StartMonitoring();
+    }
+
+    private void StartMonitoring()
+    {
+        cancellationTokenSource = new CancellationTokenSource();
+        Task.Run(async () => await MonitorCharacterAsync(cancellationTokenSource.Token));
+    }
+
+    private async Task MonitorCharacterAsync(CancellationToken cancellationToken)
+    {
+        var updateCounter = 0;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
             {
-                try
+                this.characterData = this.characterDataLoader.GetCurrentCharacterData();
+                var currentExperience = this.characterData.Experience;
+                var currentGold = GetGold();
+                var currentLastChangedAt = this.characterData.LastChangedAt;
+
+                if (currentLastChangedAt > this.previousChangedAt)
                 {
-                    this.characterData = this.characterDataLoader.GetCurrentCharacterData();
-                    var currentExperience = this.characterData.Experience;
-                    var currentGold = GetGold();
-                    var currentLastChangedAt = this.characterData.LastChangedAt;
-
-                    if (currentLastChangedAt > this.previousChangedAt)
-                    {
-                        this.runCounter++;
-                        this.expOfRuns.Add(currentExperience - this.previousExperience);
-                        this.previousChangedAt = currentLastChangedAt;
-                    }
-
-                    UpdateHistory(currentExperience, currentGold);
-
-                    var currentGoldPerHour = GetCurrentGoldPerHour();
-                    var currentExperiencePerHour = GetCurrentExperiencePerHour();
-                    var experienceThresholdForLevelUp = this.characterData.NextLevelAtExperience;
-                    var experienceDelta = experienceThresholdForLevelUp - currentExperience;
-
-                    double hoursForLevelUp = 999999999;
-                    double runsForLevelUp = 999999999;
-                    if (currentExperiencePerHour > 0)
-                    {
-                        hoursForLevelUp = experienceDelta / currentExperiencePerHour;
-                        if (this.expOfRuns.Count > 0)
-                        {
-                            runsForLevelUp = experienceDelta / this.expOfRuns.Average();
-                        }
-                    }
-
-                    if (updateCounter % 5 == 0)
-                    {
-                        // Marshal UI updates to the UI thread
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            CurrentDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            LevelUpEta = ReadabilityHelper.ConvertToHoursAndMinutesText(hoursForLevelUp);
-                            ExpPerHour = ReadabilityHelper.ConvertToSi(currentExperiencePerHour);
-                            GoldPerHour = ReadabilityHelper.ConvertToSi(currentGoldPerHour);
-                            LevelUpProgress = $"{CalculateLvlUpProgressPercentage():0.00}%";
-                            SessionTimer = $"{(DateTime.Now - this.sessionStartedAt).TotalMinutes:0}m";
-                            Runs = this.runCounter;
-                            LevelUpRunsEta = $"{runsForLevelUp:0}";
-                        });
-                    }
-
-                    updateCounter++;
-
-                    await Task.Delay(TimeBetweenCharacterRefreshInSeconds * 1000, cancellationToken);
+                    this.runCounter++;
+                    this.expOfRuns.Add(currentExperience - this.previousExperience);
+                    this.previousChangedAt = currentLastChangedAt;
                 }
-                catch (OperationCanceledException)
+
+                UpdateHistory(currentExperience, currentGold);
+
+                var currentGoldPerHour = GetCurrentGoldPerHour();
+                var currentExperiencePerHour = GetCurrentExperiencePerHour();
+                var experienceThresholdForLevelUp = this.characterData.NextLevelAtExperience;
+                var experienceDelta = experienceThresholdForLevelUp - currentExperience;
+
+                double hoursForLevelUp = 999999999;
+                double runsForLevelUp = 999999999;
+                if (currentExperiencePerHour > 0)
                 {
-                    break;
+                    hoursForLevelUp = experienceDelta / currentExperiencePerHour;
+                    if (this.expOfRuns.Count > 0)
+                    {
+                        runsForLevelUp = experienceDelta / this.expOfRuns.Average();
+                    }
                 }
-                catch (Exception ex)
+
+                if (updateCounter % 5 == 0)
                 {
-                    Console.WriteLine($"ERROR: Error during character monitoring: {ex.Message}");
+                    // Marshal UI updates to the UI thread
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        CurrentDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        LevelUpEta = ReadabilityHelper.ConvertToHoursAndMinutesText(hoursForLevelUp);
+                        ExpPerHour = ReadabilityHelper.ConvertToSi(currentExperiencePerHour);
+                        GoldPerHour = ReadabilityHelper.ConvertToSi(currentGoldPerHour);
+                        LevelUpProgress = $"{CalculateLvlUpProgressPercentage():0.00}%";
+                        SessionTimer = $"{(DateTime.Now - this.sessionStartedAt).TotalMinutes:0}m";
+                        Runs = this.runCounter;
+                        LevelUpRunsEta = $"{runsForLevelUp:0}";
+                    });
                 }
+
+                updateCounter++;
+
+                await Task.Delay(TimeBetweenCharacterRefreshInSeconds * 1000, cancellationToken);
             }
-        }
-
-        private double GetCurrentExperiencePerHour()
-        {
-            if (experienceHistory.Count == 0) return 0;
-            var result = this.experienceHistory.Average() * (OneHourInSeconds / TimeBetweenCharacterRefreshInSeconds);
-            return result;
-        }
-
-        private double GetCurrentGoldPerHour()
-        {
-            if (goldHistory.Count == 0) return 0;
-            var result = this.goldHistory.Average() * (OneHourInSeconds / TimeBetweenCharacterRefreshInSeconds);
-            return result;
-        }
-
-        private void UpdateHistory(long currentExperience, long currentGold)
-        {
-            this.experienceHistory.Add(currentExperience - this.previousExperience);
-            this.previousExperience = currentExperience;
-
-            this.goldHistory.Add(currentGold - this.previousGold);
-            this.previousGold = currentGold;
-
-            // Limit history size to prevent unbounded memory growth
-            if (this.experienceHistory.Count > MaxHistorySize)
+            catch (OperationCanceledException)
             {
-                this.experienceHistory.RemoveAt(0);
+                break;
             }
-            if (this.goldHistory.Count > MaxHistorySize)
+            catch (Exception ex)
             {
-                this.goldHistory.RemoveAt(0);
+                Console.WriteLine($"ERROR: Error during character monitoring: {ex.Message}");
             }
         }
+    }
 
-        private long GetGold() => this.characterData.GoldInventory + this.characterData.GoldStash;
+    private double GetCurrentExperiencePerHour()
+    {
+        if (experienceHistory.Count == 0) return 0;
+        var result = this.experienceHistory.Average() * (OneHourInSeconds / TimeBetweenCharacterRefreshInSeconds);
+        return result;
+    }
 
-        private double CalculateLvlUpProgressPercentage()
+    private double GetCurrentGoldPerHour()
+    {
+        if (goldHistory.Count == 0) return 0;
+        var result = this.goldHistory.Average() * (OneHourInSeconds / TimeBetweenCharacterRefreshInSeconds);
+        return result;
+    }
+
+    private void UpdateHistory(long currentExperience, long currentGold)
+    {
+        this.experienceHistory.Add(currentExperience - this.previousExperience);
+        this.previousExperience = currentExperience;
+
+        this.goldHistory.Add(currentGold - this.previousGold);
+        this.previousGold = currentGold;
+
+        // Limit history size to prevent unbounded memory growth
+        if (this.experienceHistory.Count > MaxHistorySize)
         {
-            var currentExp = this.characterData.Experience;
-            var thresholdCurrentLevel = this.characterData.ExperienceRequiredForCurrentLevel;
-            var thresholdNextLevel = this.characterData.NextLevelAtExperience;
-            var differenceBetweenTresholds = thresholdNextLevel - thresholdCurrentLevel;
-            if (differenceBetweenTresholds == 0) return 0;
-            double experienceCollectedOnThisLevel = currentExp - thresholdCurrentLevel;
-            return (experienceCollectedOnThisLevel / differenceBetweenTresholds) * 100;
+            this.experienceHistory.RemoveAt(0);
         }
-
-        [RelayCommand]
-        private void Back()
+        if (this.goldHistory.Count > MaxHistorySize)
         {
-            mainWindowViewModel.NavigateTo(new MainMenuViewModel(settingsService, mainWindowViewModel));
+            this.goldHistory.RemoveAt(0);
         }
+    }
 
-        public void Dispose()
-        {
-            cancellationTokenSource?.Cancel();
-            cancellationTokenSource?.Dispose();
-        }
+    private long GetGold() => this.characterData.GoldInventory + this.characterData.GoldStash;
+
+    private double CalculateLvlUpProgressPercentage()
+    {
+        var currentExp = this.characterData.Experience;
+        var thresholdCurrentLevel = this.characterData.ExperienceRequiredForCurrentLevel;
+        var thresholdNextLevel = this.characterData.NextLevelAtExperience;
+        var differenceBetweenTresholds = thresholdNextLevel - thresholdCurrentLevel;
+        if (differenceBetweenTresholds == 0) return 0;
+        double experienceCollectedOnThisLevel = currentExp - thresholdCurrentLevel;
+        return (experienceCollectedOnThisLevel / differenceBetweenTresholds) * 100;
+    }
+
+    [RelayCommand]
+    private void Back()
+    {
+        mainWindowViewModel.NavigateTo(new MainMenuViewModel(settingsService, mainWindowViewModel));
+    }
+
+    public void Dispose()
+    {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource?.Dispose();
     }
 }

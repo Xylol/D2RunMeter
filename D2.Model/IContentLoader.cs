@@ -1,8 +1,7 @@
-﻿namespace D2.Model
+﻿namespace D2.Model;
+
+public interface IContentLoader
 {
-    public interface IContentLoader
-    {
-        byte[] GetSaveGameContent(string fullPathToFileOnDisk);
-        byte[] GetSaveGameContent(Stream saveGameFileStream);
-    }
+    byte[] GetSaveGameContent(string fullPathToFileOnDisk);
+    byte[] GetSaveGameContent(Stream saveGameFileStream);
 }

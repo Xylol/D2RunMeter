@@ -1,41 +1,33 @@
-﻿namespace D2.Model
+﻿namespace D2.Model;
+
+public record Character
 {
-    public class Character
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Title { get; set; }
-        public string? GameType { get; set; }
-        public string? Game { get; set; }
-        public string? Class { get; set; }
-        public DateTime LastChangedAt { get; set; }
+    public string Name { get; init; } = string.Empty;
+    public DateTime LastChangedAt { get; init; }
 
-        public int Level { get; set; }
-        public long Experience { get; set; }
-        public long NextLevelAtExperience { get; set; }
-        public long ExperienceRequiredForCurrentLevel { get; set; }
+    public int Level { get; init; }
+    public long Experience { get; init; }
+    public long NextLevelAtExperience { get; init; }
+    public long ExperienceRequiredForCurrentLevel { get; init; }
+        
+    public int GoldInventory { get; init; }
+    public int GoldStash { get; init; }
 
-        public int Strength { get; set; }
-        public int Dexterity { get; set; }
-        public int Vitality { get; set; }
-        public int Energy { get; set; }
-        public int StatusLeft { get; set; }
+    public int Strength { get; init; }
+    public int Dexterity { get; init; }
+    public int Vitality { get; init; }
+    public int Energy { get; init; }
+    public int StatusLeft { get; init; }
 
-        public int Life { get; set; }
-        public int LifeMax { get; set; }
+    public int Life { get; init; }
+    public int LifeMax { get; init; }
 
-        public int Stamina { get; set; }
-        public int StaminaMax { get; set; }
+    public int Stamina { get; init; }
+    public int StaminaMax { get; init; }
 
-        public int Mana { get; set; }
-        public int ManaMax { get; set; }
+    public int Mana { get; init; }
+    public int ManaMax { get; init; }
 
-        public int ResistFire { get; set; }
-        public int ResistIce { get; set; }
-        public int ResistLightning { get; set; }
 
-        public int GoldInventory { get; set; }
-        public int GoldStash { get; set; }
-
-        public int SkillLeft { get; set; }
-    }
+    public int SkillLeft { get; init; }
 }

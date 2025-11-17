@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace D2.UI.Views
+namespace D2.UI.Views;
+
+public partial class AboutView : UserControl
 {
-    public partial class AboutView : UserControl
+    public AboutView()
     {
-        public AboutView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace D2.UI.Views
+namespace D2.UI.Views;
+
+public partial class CharacterInformationView : UserControl
 {
-    public partial class CharacterInformationView : UserControl
+    public CharacterInformationView()
     {
-        public CharacterInformationView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

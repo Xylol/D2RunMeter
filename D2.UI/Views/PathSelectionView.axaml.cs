@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace D2.UI.Views
+namespace D2.UI.Views;
+
+public partial class PathSelectionView : UserControl
 {
-    public partial class PathSelectionView : UserControl
+    public PathSelectionView()
     {
-        public PathSelectionView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }
