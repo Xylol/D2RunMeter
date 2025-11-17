@@ -18,11 +18,12 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     private int runCounter;
     private readonly List<long> expOfRuns = [];
     private const int MaxRunHistorySize = 1000;
-    private DateTime previousChangedAt;
     private DateTime lastKnownFileTimestamp;
     private CancellationTokenSource? cancellationTokenSource;
     private FileSystemWatcher? fileWatcher;
     private readonly object updateLock = new();
+    private System.Threading.Timer? debounceTimer;
+    private const int DebounceDelayMilliseconds = 500;
 
     [ObservableProperty]
     private string characterName;
@@ -69,7 +70,6 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
         this.sessionStartExp = this.characterData.Experience;
         this.sessionStartGold = GetGold();
         this.previousExperience = this.sessionStartExp;
-        this.previousChangedAt = this.characterData.LastChangedAt;
         this.lastKnownFileTimestamp = this.characterDataLoader.GetLastWriteTime();
 
         StartMonitoring();
@@ -115,8 +115,13 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
 
     private void OnFileChanged(object sender, FileSystemEventArgs e)
     {
-        // Trigger immediate check (will be debounced by timestamp check)
-        Task.Run(() => CheckForUpdates());
+        // Debounce file changes to prevent counting the same save multiple times
+        debounceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        debounceTimer = new System.Threading.Timer(
+            _ => CheckForUpdates(),
+            null,
+            DebounceDelayMilliseconds,
+            Timeout.Infinite);
     }
 
     private void OnFileWatcherError(object sender, ErrorEventArgs e)
@@ -134,31 +139,27 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
             {
                 var currentFileTimestamp = this.characterDataLoader.GetLastWriteTime();
 
-                // Only reload if file actually changed (debouncing)
+                // Only reload and count as new run if file timestamp actually changed (debouncing)
                 if (currentFileTimestamp != this.lastKnownFileTimestamp)
                 {
                     this.characterData = this.characterDataLoader.GetCurrentCharacterData();
+                    var currentExperience = this.characterData.Experience;
+
+                    // Count as new run whenever file write time changed
+                    this.runCounter++;
+                    this.expOfRuns.Add(currentExperience - this.previousExperience);
+                    this.previousExperience = currentExperience;
+
+                    // Update last known timestamp to prevent counting same write twice
                     this.lastKnownFileTimestamp = currentFileTimestamp;
 
-                    var currentExperience = this.characterData.Experience;
-                    var currentLastChangedAt = this.characterData.LastChangedAt;
-
-                    // Detect run completion
-                    if (currentLastChangedAt > this.previousChangedAt)
+                    // Prevent unbounded list growth
+                    if (this.expOfRuns.Count > MaxRunHistorySize)
                     {
-                        this.runCounter++;
-                        this.expOfRuns.Add(currentExperience - this.previousExperience);
-                        this.previousExperience = currentExperience;
-                        this.previousChangedAt = currentLastChangedAt;
-
-                        // Prevent unbounded list growth
-                        if (this.expOfRuns.Count > MaxRunHistorySize)
-                        {
-                            this.expOfRuns.RemoveAt(0);
-                        }
-
-                        runDetected = true;
+                        this.expOfRuns.RemoveAt(0);
                     }
+
+                    runDetected = true;
                 }
             }
             catch (Exception ex)
@@ -206,7 +207,7 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
                 SessionTimer = $"{sessionMinutes:0}m";
                 Runs = this.runCounter;
                 LevelUpRunsEta = runsForLevelUp > 999999 ? "N/A" : $"{runsForLevelUp:0}";
-                RunsPerHour = $"{currentRunsPerHour:0.0}";
+                RunsPerHour = $"{currentRunsPerHour:0}";
             });
         }
         catch (Exception ex)
@@ -259,6 +260,9 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
     {
         cancellationTokenSource?.Cancel();
         cancellationTokenSource?.Dispose();
+
+        debounceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        debounceTimer?.Dispose();
 
         if (fileWatcher != null)
         {
