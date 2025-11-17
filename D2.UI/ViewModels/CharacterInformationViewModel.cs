@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,8 +18,8 @@ namespace D2.UI.ViewModels
         private readonly MainWindowViewModel mainWindowViewModel;
         private readonly CharacterDataLoader characterDataLoader;
         private Character characterData;
-        private readonly System.Collections.Generic.List<long> experienceHistory = new();
-        private readonly System.Collections.Generic.List<long> goldHistory = new();
+        private readonly List<long> experienceHistory = new();
+        private readonly List<long> goldHistory = new();
         private const int MaxHistorySize = 3600; // Keep max 1 hour of history
         private long previousExperience;
         private long previousGold;
@@ -26,7 +27,7 @@ namespace D2.UI.ViewModels
         private readonly DateTime sessionStartedAt = DateTime.Now;
         private const double OneHourInSeconds = 3600.0;
         private int runCounter;
-        private readonly System.Collections.Generic.List<long> expOfRuns = new();
+        private readonly List<long> expOfRuns = new();
         private DateTime previousChangedAt;
         private CancellationTokenSource? cancellationTokenSource;
 
@@ -80,9 +81,9 @@ namespace D2.UI.ViewModels
             this.characterName = this.characterData.Name;
             this.characterLevel = this.characterData.Level;
 
-            this.previousExperience = GetExperience();
+            this.previousExperience = this.characterData.Experience;
             this.previousGold = GetGold();
-            this.previousChangedAt = GetCharacterLastChangedAt();
+            this.previousChangedAt = this.characterData.LastChangedAt;
 
             StartMonitoring();
         }
@@ -103,7 +104,7 @@ namespace D2.UI.ViewModels
                 {
                     this.characterData = this.characterDataLoader.GetCurrentCharacterData();
 
-                    var currentExperience = GetExperience();
+                    var currentExperience = this.characterData.Experience;
 
                     var currentLastChangedAt = this.characterData.LastChangedAt;
                     if (currentLastChangedAt > this.previousChangedAt)
@@ -118,7 +119,7 @@ namespace D2.UI.ViewModels
                     UpdateHistory(currentExperience, currentGold);
 
                     var currentGoldPerHour = GetCurrentGoldPerHour();
-                    var experienceThresholdForLevelUp = GetExperienceThresholdForLevelUp();
+                    var experienceThresholdForLevelUp = this.characterData.NextLevelAtExperience;
                     var currentExperiencePerHour = GetCurrentExperiencePerHour();
                     var experienceDelta = experienceThresholdForLevelUp - currentExperience;
 
@@ -197,21 +198,13 @@ namespace D2.UI.ViewModels
             }
         }
 
-        private long GetExperience() => this.characterData.Experience;
-
         private long GetGold() => this.characterData.GoldInventory + this.characterData.GoldStash;
-
-        private long GetExperienceThresholdForLevelUp() => this.characterData.NextLevelAtExperience;
-
-        private long GetExperienceThresholdOfCurrentLevel() => this.characterData.ExperienceRequiredForCurrentLevel;
-
-        private DateTime GetCharacterLastChangedAt() => this.characterData.LastChangedAt;
 
         private double CalculateLvlUpProgressPercentage()
         {
-            var currentExp = GetExperience();
-            var thresholdCurrentLevel = GetExperienceThresholdOfCurrentLevel();
-            var thresholdNextLevel = GetExperienceThresholdForLevelUp();
+            var currentExp = this.characterData.Experience;
+            var thresholdCurrentLevel = this.characterData.ExperienceRequiredForCurrentLevel;
+            var thresholdNextLevel = this.characterData.NextLevelAtExperience;
             var differenceBetweenTresholds = thresholdNextLevel - thresholdCurrentLevel;
             if (differenceBetweenTresholds == 0) return 0;
             double experienceCollectedOnThisLevel = currentExp - thresholdCurrentLevel;
