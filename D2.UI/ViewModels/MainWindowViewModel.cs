@@ -48,6 +48,11 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentViewModel = viewModel;
     }
 
+    public void NavigateToMainMenu()
+    {
+        NavigateTo(new MainMenuViewModel(settingsService, this));
+    }
+
     public void ExitApplication()
     {
         Environment.Exit(0);

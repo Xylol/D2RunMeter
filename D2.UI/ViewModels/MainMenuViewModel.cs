@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using D2.Model;
 using D2.UI.Services;
 
 namespace D2.UI.ViewModels;
@@ -63,12 +64,18 @@ public partial class MainMenuViewModel(
     [RelayCommand]
     private void Resume()
     {
-        if (string.IsNullOrWhiteSpace(settingsService.GetSelectedCharacter()))
+        var path = settingsService.GetSaveGamePath();
+        var chosenCharacter = settingsService.GetSelectedCharacter();
+
+        if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(chosenCharacter))
         {
             LoadCharacter();
             return;
         }
-        mainWindowViewModel.NavigateTo(new CharacterInformationViewModel(settingsService, mainWindowViewModel));
+
+        var characterFullPath = Path.Combine(path, $"{chosenCharacter}.d2s");
+        var characterDataLoader = new CharacterDataLoader(characterFullPath, new ContentLoader());
+        mainWindowViewModel.NavigateTo(new CharacterInformationViewModel(mainWindowViewModel, characterDataLoader));
     }
 
     [RelayCommand]
