@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:D2.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="600"
+             x:Class="D2.UI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <StackPanel HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Spacing="{StaticResource SpacingMedium}"
+                Margin="{StaticResource MarginContainer}">
+        <TextBlock Text="Settings"
+                   Classes="Title"
+                   Margin="{StaticResource MarginBottom}"/>
+
+        <!-- Always on Top Toggle -->
+        <Border Classes="StatsCard">
+            <CheckBox Content="Always on top"
+                      IsChecked="{Binding IsAlwaysOnTop, Mode=TwoWay}"
+                      FontSize="{StaticResource FontSizeMedium}"/>
+        </Border>
+
+        <!-- Path Selection Button -->
+        <Button Content="Change save path"
+                Command="{Binding NavigateToPathSelectionCommand}"
+                Classes="MenuButton"/>
+
+        <Button Content="Back"
+                Command="{Binding BackCommand}"
+                Classes="MenuButton"
+                Margin="{StaticResource MarginTop}"/>
+    </StackPanel>
+
+</UserControl>

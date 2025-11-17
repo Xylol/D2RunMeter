@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:D2.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="D2.UI.Views.LoadCharacterView"
+             x:DataType="vm:LoadCharacterViewModel">
+
+    <Grid HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch"
+          Margin="{StaticResource MarginContainer}"
+          RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
+        <TextBlock Grid.Row="0"
+                   Text="Load Character"
+                   Classes="Title"
+                   Margin="{StaticResource MarginBottomMedium}"/>
+
+        <TextBlock Grid.Row="1"
+                   Text="{Binding CurrentCharacter, StringFormat='Current character: {0}'}"
+                   IsVisible="{Binding CurrentCharacter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontSize="{StaticResource FontSizeMedium}"
+                   Margin="{StaticResource MarginBottomSmall}"/>
+
+        <TextBox Grid.Row="2"
+                 Text="{Binding CharacterName}"
+                 Watermark="Search character"
+                 FontSize="{StaticResource FontSizeMedium}"
+                 Padding="{StaticResource PaddingSmall}"
+                 Margin="{StaticResource MarginBottomSmall}"/>
+
+        <TextBlock Grid.Row="3"
+                   Text="Available characters:"
+                   FontSize="{StaticResource FontSizeMedium}"
+                   FontWeight="Bold"
+                   Margin="{StaticResource MarginVerticalSmall}"/>
+
+        <ScrollViewer Grid.Row="4" Margin="{StaticResource MarginBottomSmall}">
+            <ItemsControl ItemsSource="{Binding FilteredCharacters}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding}"
+                                Command="{Binding $parent[ItemsControl].((vm:LoadCharacterViewModel)DataContext).SelectCharacterCommand}"
+                                CommandParameter="{Binding}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Classes="SmallButton"
+                                Margin="{StaticResource MarginBottomTiny}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="5"
+                   Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Foreground="Red"
+                   FontSize="{StaticResource FontSizeLabel}"
+                   TextWrapping="Wrap"
+                   Margin="{StaticResource MarginBottomSmall}"/>
+
+        <StackPanel Grid.Row="6"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="{StaticResource SpacingSmall}">
+            <Button Content="OK"
+                    Command="{Binding LoadCharacterCommand}"
+                    Classes="MenuButton"/>
+
+            <Button Content="Back"
+                    Command="{Binding BackCommand}"
+                    Classes="MenuButton"/>
+        </StackPanel>
+    </Grid>
+
+</UserControl>

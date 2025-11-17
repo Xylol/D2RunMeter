@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:D2.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="D2.UI.Views.MainMenuView"
+             x:DataType="vm:MainMenuViewModel">
+
+    <StackPanel HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Spacing="{StaticResource SpacingSmall}"
+                Margin="{StaticResource MarginContainer}">
+        <Image Source="/Assets/D2RunMeter-v01.png"
+               Stretch="Uniform"
+               MaxWidth="300"
+               MaxHeight="200"
+               HorizontalAlignment="Center"
+               Margin="{StaticResource MarginBottom}"/>
+
+        <TextBlock Text="Main Menu"
+                   FontSize="{StaticResource FontSizeMedium}"
+                   HorizontalAlignment="Center"
+                   Margin="{StaticResource MarginBottomMedium}"/>
+
+        <Border Classes.SelectedMenuBorder="{Binding SelectedIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=0}">
+            <Button Content="1. Resume"
+                    Command="{Binding ResumeCommand}"
+                    Classes="MenuButton"/>
+        </Border>
+
+        <Border Classes.SelectedMenuBorder="{Binding SelectedIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=1}">
+            <Button Content="2. Load character"
+                    Command="{Binding LoadCharacterCommand}"
+                    Classes="MenuButton"/>
+        </Border>
+
+        <Border Classes.SelectedMenuBorder="{Binding SelectedIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=2}">
+            <Button Content="3. Settings"
+                    Command="{Binding SettingsCommand}"
+                    Classes="MenuButton"/>
+        </Border>
+
+        <Border Classes.SelectedMenuBorder="{Binding SelectedIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=3}">
+            <Button Content="4. About"
+                    Command="{Binding AboutCommand}"
+                    Classes="MenuButton"/>
+        </Border>
+
+        <Border Classes.SelectedMenuBorder="{Binding SelectedIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=4}">
+            <Button Content="5. Exit"
+                    Command="{Binding ExitCommand}"
+                    Classes="MenuButton"/>
+        </Border>
+    </StackPanel>
+
+</UserControl>

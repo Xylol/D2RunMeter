@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:D2.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="D2.UI.Views.PathSelectionView"
+             x:DataType="vm:PathSelectionViewModel">
+
+    <StackPanel HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Spacing="{StaticResource SpacingSmall}"
+                Margin="{StaticResource MarginContainer}">
+        <TextBlock Text="D2RunMeter - Select Path"
+                   Classes="Title"
+                   Margin="{StaticResource MarginBottomMedium}"/>
+
+        <TextBlock Text="{Binding CurrentPath, StringFormat='Current path: {0}'}"
+                   IsVisible="{Binding CurrentPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontSize="{StaticResource FontSizeMedium}"
+                   Margin="{StaticResource MarginBottomSmall}"/>
+
+        <TextBlock Text="Select directory for save games."
+                   FontSize="{StaticResource FontSizeMedium}"
+                   Margin="{StaticResource MarginBottomSmall}"/>
+
+        <TextBox Text="{Binding PathInput}"
+                 Watermark="Enter path to save games directory..."
+                 FontSize="{StaticResource FontSizeMedium}"
+                 Padding="{StaticResource PaddingSmall}"
+                 Margin="{StaticResource MarginBottomSmall}"/>
+
+        <TextBlock Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Foreground="Red"
+                   FontSize="{StaticResource FontSizeLabel}"
+                   TextWrapping="Wrap"
+                   Margin="{StaticResource MarginBottomSmall}"/>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="{StaticResource SpacingSmall}">
+            <Button Content="Save Path"
+                    Command="{Binding SavePathCommand}"
+                    Classes="MenuButton"/>
+
+            <Button Content="Back"
+                    Command="{Binding BackCommand}"
+                    Classes="MenuButton"
+                    IsVisible="{Binding CurrentPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        </StackPanel>
+    </StackPanel>
+
+</UserControl>
