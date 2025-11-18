@@ -32,11 +32,10 @@ public static class ReadabilityHelper
 
     public static string ConvertToHoursAndMinutesText(double inputNumber)
     {
-        var result = string.Empty;
         var hours = (int)inputNumber;
         var minutes = (int)((inputNumber - hours) * 60);
 
-        result = hours.Equals(0) ? $"{minutes}m" : $"{hours:00}h {minutes:00}m";
+        var result = hours.Equals(0) ? $"{minutes}m" : $"{hours:00}h {minutes:00}m";
 
         return result;
     }

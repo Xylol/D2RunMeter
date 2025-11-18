@@ -9,12 +9,12 @@ public class SaveGame
     private readonly int[] gfCharactersAsHex = [0x67, 0x66];
     private readonly string gfPartAsText;
     private readonly DateTime changedDate;
-    private readonly bool[] reveresedAllBools;
+    private readonly bool[] reversedAllBools;
     private static Dictionary<int, long>? levelExperienceCache;
 
     public SaveGame(byte[] fileContent, DateTime changedDate)
     {
-        this.reveresedAllBools = ConvertContent.ReverseEndianess(fileContent).ToArray();
+        this.reversedAllBools = ConvertContent.ReverseEndianess(fileContent).ToArray();
         this.changedDate = changedDate;
         this.gfPartAsText = ConvertContent.GetStringRepresentation(
             ConvertContent.ReverseBitOrderForEachEightElementPack(
@@ -28,10 +28,10 @@ public class SaveGame
         var gfReversedBools = ConvertContent.ReverseBitOrderForEachEightElementPack(gfConcatedBools).ToArray();
         var gfAsText = ConvertContent.GetStringRepresentation(gfReversedBools);
 
-        var reveresedBoolsAsText = ConvertContent.GetStringRepresentation(this.reveresedAllBools);
+        var reversedBoolsAsText = ConvertContent.GetStringRepresentation(this.reversedAllBools);
 
-        var indexOfGandF = reveresedBoolsAsText.IndexOf(gfAsText, StringComparison.Ordinal);
-        var result = reveresedBoolsAsText.Substring(indexOfGandF);
+        var indexOfGandF = reversedBoolsAsText.IndexOf(gfAsText, StringComparison.Ordinal);
+        var result = reversedBoolsAsText.Substring(indexOfGandF);
 
         return result;
     }
@@ -47,34 +47,22 @@ public class SaveGame
                 ConvertContent.GetBools(pair.Value).ToArray());
             stats[pair.Key] = value;
         }
-        var level = (int)stats.GetValueOrDefault("001100000", 0);
+        var level = (int)stats.GetValueOrDefault(SaveGameGfTokens.Level.Name, 1);
 
         return new Character
         {
             Name = GetName(),
             LastChangedAt = changedDate,
             Level = level,
-            Experience = stats.GetValueOrDefault("101100000", 0),
+            Experience = stats.GetValueOrDefault(SaveGameGfTokens.Experience.Name, 0),
             NextLevelAtExperience = GetRequiredExperienceForLevel(level + 1),
             ExperienceRequiredForCurrentLevel = GetRequiredExperienceForLevel(level),
-            Strength = (int)stats.GetValueOrDefault("000000000", 0),
-            Energy = (int)stats.GetValueOrDefault("100000000", 0),
-            Dexterity = (int)stats.GetValueOrDefault("010000000", 0),
-            Vitality = (int)stats.GetValueOrDefault("110000000", 0),
-            StatusLeft = (int)stats.GetValueOrDefault("001000000", 0),
-            SkillLeft = (int)stats.GetValueOrDefault("101000000", 0),
-            Life = (int)stats.GetValueOrDefault("011000000", 0) / 256,
-            LifeMax = (int)stats.GetValueOrDefault("111000000", 0) / 256,
-            Mana = (int)stats.GetValueOrDefault("000100000", 0) / 256,
-            ManaMax = (int)stats.GetValueOrDefault("100100000", 0) / 256,
-            Stamina = (int)stats.GetValueOrDefault("010100000", 0) / 256,
-            StaminaMax = (int)stats.GetValueOrDefault("110100000", 0) / 256,
-            GoldInventory = (int)stats.GetValueOrDefault("011100000", 0),
-            GoldStash = (int)stats.GetValueOrDefault("111100000", 0)
+            GoldInventory = (int)stats.GetValueOrDefault(SaveGameGfTokens.GoldInventory.Name, 0),
+            GoldStash = (int)stats.GetValueOrDefault(SaveGameGfTokens.GoldStash.Name, 0)
         };
     }
 
-    private long GetRequiredExperienceForLevel(int currentLevel)
+    private static long GetRequiredExperienceForLevel(int currentLevel)
     {
         if (levelExperienceCache == null)
         {
@@ -88,7 +76,7 @@ public class SaveGame
     {
         const int countOfHeaderRows = 1;
         var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = "D2.Model.LevelExperienceMapping.ssv";
+        const string resourceName = "D2.Model.LevelExperienceMapping.ssv";
 
         using var stream = assembly.GetManifestResourceStream(resourceName)
             ?? throw new Exception($"Embedded resource '{resourceName}' not found");
@@ -118,11 +106,11 @@ public class SaveGame
 
     public string GetName()
     {
-        var nameBits = Parser.GetValuesForSingleToken(this.reveresedAllBools, SaveGameTokens.Name);
+        var nameBits = Parser.GetValuesForSingleToken(this.reversedAllBools, SaveGameTokens.Name);
         return GetAsciiFromBool(nameBits);
     }
 
-    private string GetAsciiFromBool(bool[] input)
+    private static string GetAsciiFromBool(bool[] input)
     {
         var nameNumberes = ConvertContent.GetNumbersFromMSB(input);
         var nameBytes = nameNumberes.Select(n => BitConverter.GetBytes(n).First()).ToArray();

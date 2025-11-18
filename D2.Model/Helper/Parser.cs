@@ -35,24 +35,24 @@ public static class Parser
         const int widthOfGf = 16;
         const int defaultIdentifierWidth = 9;
 
-        var lookups = new List<Tuple<string, int>>
+        var lookups = new List<Tuple<string, int, string>>
         {
-            new Tuple<string, int>("000000000", 10),
-            new Tuple<string, int>("100000000", 10),
-            new Tuple<string, int>("010000000", 10),
-            new Tuple<string, int>("110000000", 10),
-            new Tuple<string, int>("001000000", 10),
-            new Tuple<string, int>("101000000", 8),
-            new Tuple<string, int>("011000000", 21),
-            new Tuple<string, int>("111000000", 21),
-            new Tuple<string, int>("000100000", 21),
-            new Tuple<string, int>("100100000", 21),
-            new Tuple<string, int>("010100000", 21),
-            new Tuple<string, int>("110100000", 21),
-            new Tuple<string, int>("001100000", 7),
-            new Tuple<string, int>("101100000", 32),
-            new Tuple<string, int>("011100000", 25),
-            new Tuple<string, int>("111100000", 25)
+            new ("000000000", 10, SaveGameGfTokens.Strength.Name),
+            new ("100000000", 10, SaveGameGfTokens.Energy.Name),
+            new ("010000000", 10, SaveGameGfTokens.Dexterity.Name),
+            new ("110000000", 10, SaveGameGfTokens.Vitality.Name),
+            new ("001000000", 10, SaveGameGfTokens.StatusLeft.Name),
+            new ("101000000", 8, SaveGameGfTokens.SkillLeft.Name),
+            new ("011000000", 21, SaveGameGfTokens.Life.Name),
+            new ("111000000", 21, SaveGameGfTokens.LifeMax.Name),
+            new ("000100000", 21, SaveGameGfTokens.Mana.Name),
+            new ("100100000", 21, SaveGameGfTokens.ManaMax.Name),
+            new ("010100000", 21, SaveGameGfTokens.Stamina.Name),
+            new ("110100000", 21, SaveGameGfTokens.StaminaMax.Name),
+            new ("001100000", 7, SaveGameGfTokens.Level.Name),
+            new ("101100000", 32,SaveGameGfTokens.Experience.Name),
+            new ("011100000", 25, SaveGameGfTokens.GoldInventory.Name),
+            new ("111100000", 25, SaveGameGfTokens.GoldStash.Name)
         };
 
         var result = new Dictionary<string, string>();
@@ -62,7 +62,7 @@ public static class Parser
             var checkedText = string.Concat(inputText.Skip(i).Take(defaultIdentifierWidth));
             if (checkedText.Equals(lookups.First().Item1))
             {
-                result.Add(lookups.First().Item1, string.Concat(inputText.Skip(defaultIdentifierWidth + i).Take(lookups.First().Item2)));
+                result.Add(lookups.First().Item3, string.Concat(inputText.Skip(defaultIdentifierWidth + i).Take(lookups.First().Item2)));
                 i += defaultIdentifierWidth + lookups.First().Item2;
             }
 

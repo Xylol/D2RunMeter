@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using NUnit.Framework.Legacy;
+using FluentAssertions;
 
 namespace D2.Model.Tests;
 
@@ -17,6 +17,6 @@ public class ParserTests
         var actual = strengthToken.Name;
 
         // Assert
-        ClassicAssert.AreEqual(expected, actual);
+        actual.Should().Be(expected);
     }
 }
