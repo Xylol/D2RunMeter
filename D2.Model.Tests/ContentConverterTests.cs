@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using D2.Model.Helper;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
+using FluentAssertions;
 
 namespace D2.Model.Tests;
 
@@ -38,7 +38,8 @@ public class ContentConverterTests
             // Act
             var actualBitArray = ConvertContent.ReverseEndianess(this.craftedSaveGame);
 
-            CollectionAssert.AreEqual(expected, actualBitArray);
+            // Assert
+            actualBitArray.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -53,7 +54,7 @@ public class ContentConverterTests
                 ConvertContent.GetStringRepresentation(inputBools);
 
             // Assert
-            ClassicAssert.AreEqual(expectedStringRepresentation, actualStringRepresentation);
+            actualStringRepresentation.Should().BeEquivalentTo(expectedStringRepresentation);
         }
 
         [Test]
@@ -71,7 +72,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetBools(testByte);
 
             // Assert
-            ClassicAssert.AreEqual(expected, actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -89,7 +90,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetBools(testByte);
 
             // Assert
-            ClassicAssert.AreEqual(expected, actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -111,7 +112,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetBatchesWithEightElements(testPack);
 
             // Assert
-            ClassicAssert.AreEqual(expected, actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -133,7 +134,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetBatchesWithEightElements(testPack);
 
             // Assert
-            ClassicAssert.AreEqual(expected, actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -147,7 +148,7 @@ public class ContentConverterTests
             var actual = ConvertContent.ReverseBitOrderOfExactlyEightElements(testElements);
 
             // Assert
-            ClassicAssert.AreEqual(expected,actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -169,7 +170,7 @@ public class ContentConverterTests
             var actual = ConvertContent.ReverseBitOrderForEachEightElementPack(testPack);
 
             // Assert
-            ClassicAssert.AreEqual(expected, actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -194,7 +195,7 @@ public class ContentConverterTests
             var actualReveresedStringResult = ConvertContent.GetStringRepresentation(actualReversedBools);
 
             // Assert
-            ClassicAssert.AreEqual(expectedFirstFiveBytes,actualReveresedStringResult);
+            actualReveresedStringResult.Should().BeEquivalentTo(expectedFirstFiveBytes);
         }
 
         [Test]
@@ -210,7 +211,7 @@ public class ContentConverterTests
             var reversedActual = ConvertContent.ReverseBitOrderForEachEightElementPack(actualConcated);
 
             // Assert
-            ClassicAssert.AreEqual(expected, reversedActual);
+            expected.Should().BeEquivalentTo(reversedActual);
         }
 
         [Test]
@@ -224,7 +225,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetBools(input);
 
             // Assert
-            CollectionAssert.AreEqual(expected, actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -252,7 +253,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetNumbersFromMSB(input);
 
             // Assert
-            CollectionAssert.AreEqual(expected,actual);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Test]
@@ -270,7 +271,7 @@ public class ContentConverterTests
             var actual = ConvertContent.GetLongFromLittleEndianBools(testBools);
 
             // Assert
-            ClassicAssert.AreEqual(expected,actual);
+            actual.Should().Be(expected);
         }
 
     }

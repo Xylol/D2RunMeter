@@ -6,10 +6,9 @@ public class ContentLoader : IContentLoader
     {
         var fileInfo = new FileInfo(fullPathToFileOnDisk);
 
-        // wait if file is empty (D2 might still be writing)
         if (fileInfo.Length == 0)
         {
-            Console.WriteLine("DEBUG: FileInfo length was 0, waiting 1000ms");
+            Console.WriteLine("DEBUG: FileInfo length was 0, d2 might be writing rn, waiting 1000ms");
             Thread.Sleep(1000);
         }
 
