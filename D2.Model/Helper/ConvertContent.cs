@@ -25,7 +25,7 @@ public static class ConvertContent
     {
         if (!inputText.Any() || inputText.Any(b => !b.Equals('0') && !b.Equals('1')))
         {
-            throw new ArgumentException($"InputText must contain only 0 or 1 but had {inputText.Where(x => !x.Equals('0') && !x.Equals('1'))}");
+            throw new ArgumentException($"InputText must contain only 0 or 1 but was '{inputText}'", inputText);
         }
 
         var result = new List<bool>();
@@ -73,7 +73,7 @@ public static class ConvertContent
 
     public static string GetStringRepresentation(bool[] inputBools)
     {
-        if (!inputBools.Any())
+        if (inputBools.Length == 0)
         {
             throw new ArgumentException("Input was empty.");
         }
@@ -148,7 +148,7 @@ public static class ConvertContent
 
     public static IEnumerable<bool[]> GetBatchesWithEightElements(bool[] inputElements)
     {
-        if (!inputElements.Any())
+        if (inputElements.Length == 0)
         {
             throw new Exception("Array empty - check this.");
         }

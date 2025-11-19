@@ -13,27 +13,24 @@ public class CharacterDataLoader(string characterLocation, IContentLoader conten
 
     public Character GetCurrentCharacterData()
     {
-        var attemptCounter = 0;
+        var attemptCounter = 1;
         while (true)
         {
-            attemptCounter++;
-                
-            var updatedAt = ContentLoader.GetLastWriteTime(characterLocation);
+            var fileLastUpdatedAt = ContentLoader.GetLastWriteTime(characterLocation);
             var fileContent = contentLoader.GetSaveGameContent(characterLocation);
-            var updatedAtAfterLoadingFileContent = ContentLoader.GetLastWriteTime(characterLocation);
 
-            if (updatedAt == updatedAtAfterLoadingFileContent)
+            if (fileLastUpdatedAt == ContentLoader.GetLastWriteTime(characterLocation))
             {
-                return new SaveGame(fileContent, updatedAt).GetPlayerCharacter();
+                return new SaveGame(fileContent, fileLastUpdatedAt).GetPlayerCharacter();
             }
 
-            if (attemptCounter < MaximumLoadingAttempts)
+            if (attemptCounter >= MaximumLoadingAttempts)
             {
-                Thread.Sleep(100);
-                continue;
+                throw new Exception("Character was changed too fast between loads. This should not happen.");
             }
-
-            throw new Exception("Character was changed too fast between loads. This should not happen.");
+            
+            attemptCounter++;
+            Thread.Sleep(100);
         }
     }
 }
