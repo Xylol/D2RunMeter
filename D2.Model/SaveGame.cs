@@ -112,8 +112,8 @@ public class SaveGame
 
     private static string GetAsciiFromBool(bool[] input)
     {
-        var nameNumberes = ConvertContent.GetNumbersFromMSB(input);
-        var nameBytes = nameNumberes.Select(n => BitConverter.GetBytes(n).First()).ToArray();
+        var nameNumbers = ConvertContent.GetNumbersFromMSB(input);
+        var nameBytes = nameNumbers.Select(n => BitConverter.GetBytes(n).First()).ToArray();
         var nameString = Encoding.ASCII.GetString(nameBytes).Trim('\0');
         return nameString ?? throw new Exception("Name is null");
     }
