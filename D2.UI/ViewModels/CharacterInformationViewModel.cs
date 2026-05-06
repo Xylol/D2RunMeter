@@ -199,6 +199,7 @@ public partial class CharacterInformationViewModel : ViewModelBase, IDisposable
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
+                CharacterLevel = this.characterData.Level;
                 CurrentDateTime = now.ToString("yyyy-MM-dd HH:mm:ss");
                 LevelUpEta = hoursForLevelUp > 999999 ? "N/A" : ReadabilityHelper.ConvertToHoursAndMinutesText(hoursForLevelUp);
                 ExpPerHour = ReadabilityHelper.ConvertToSi(currentExperiencePerHour);
