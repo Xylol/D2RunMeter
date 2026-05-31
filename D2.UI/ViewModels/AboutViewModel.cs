@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Windows.Input;
 using D2.UI.Commands;
 using D2.UI.Services;
@@ -9,7 +10,7 @@ public class AboutViewModel : ViewModelBase
     private readonly SettingsService settingsService;
     private readonly MainWindowViewModel mainWindowViewModel;
 
-    public string Version { get; } = "D2RunMeter v1.0.0";
+    public string Version { get; } = $"D2RunMeter v{GetVersion()}";
     public string GitHubUrl { get; } = "github.com/Xylol/D2RunMeter";
 
     public ICommand BackCommand { get; }
@@ -24,5 +25,15 @@ public class AboutViewModel : ViewModelBase
     private void Back()
     {
         mainWindowViewModel.NavigateTo(new MainMenuViewModel(settingsService, mainWindowViewModel));
+    }
+
+    private static string GetVersion()
+    {
+        var informational = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+
+        // InformationalVersion is "1.2.3+<git-sha>"; strip the metadata suffix.
+        return informational?.Split('+')[0] ?? "dev";
     }
 }

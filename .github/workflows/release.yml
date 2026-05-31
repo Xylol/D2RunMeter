@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            artifact: D2RunMeter-win-x64.exe
+            published: D2.UI.exe
+          - rid: linux-x64
+            os: ubuntu-latest
+            artifact: D2RunMeter-linux-x64
+            published: D2.UI
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Derive version from tag
+      id: version
+      shell: bash
+      run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Publish self-contained single file
+      shell: bash
+      run: |
+        dotnet publish D2.UI/D2.UI.csproj \
+          --configuration Release \
+          --runtime ${{ matrix.rid }} \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -p:EnableCompressionInSingleFile=true \
+          -p:DebugType=none \
+          -p:Version=${{ steps.version.outputs.version }} \
+          --output publish
+
+    - name: Rename artifact
+      shell: bash
+      run: mv "publish/${{ matrix.published }}" "${{ matrix.artifact }}"
+
+    - name: Upload to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ${{ matrix.artifact }}
+        fail_on_unmatched_files: true
