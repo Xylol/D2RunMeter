@@ -1,3 +1,10 @@
+# Code coverage output (coverlet / XPlat collector)
+coverage.json
+coverage.cobertura.xml
+coverage.opencover.xml
+coverage*.xml
+[Tt]est[Rr]esults/
+
 # User-specific files
 *.suo
 *.user

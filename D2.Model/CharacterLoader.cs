@@ -28,7 +28,7 @@ public class CharacterDataLoader(string characterLocation, IContentLoader conten
             {
                 throw new Exception("Character was changed too fast between loads. This should not happen.");
             }
-            
+
             attemptCounter++;
             Thread.Sleep(100);
         }

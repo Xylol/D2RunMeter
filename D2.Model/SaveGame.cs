@@ -7,6 +7,7 @@ namespace D2.Model;
 public class SaveGame
 {
     private readonly int[] gfCharactersAsHex = [0x67, 0x66];
+    private const int widthOfGf = 16;
     private readonly string gfPartAsText;
     private readonly DateTime changedDate;
     private readonly bool[] reversedAllBools;
@@ -16,9 +17,9 @@ public class SaveGame
     {
         this.reversedAllBools = ConvertContent.ReverseEndianess(fileContent).ToArray();
         this.changedDate = changedDate;
-        this.gfPartAsText = ConvertContent.GetStringRepresentation(
+        this.gfPartAsText = string.Concat(ConvertContent.GetStringRepresentation(
             ConvertContent.ReverseBitOrderForEachEightElementPack(
-                GetGfBooleans()).ToArray());
+                GetGfBooleans()).ToArray()).Skip(widthOfGf));
     }
 
     public string GetSubstringStartingWithAsciiGf()
