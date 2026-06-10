@@ -50,8 +50,7 @@ public class ContentConverterTests
             var expectedStringRepresentation = "110";
 
             // Act
-            var actualStringRepresentation =
-                ConvertContent.GetStringRepresentation(inputBools);
+            var actualStringRepresentation = inputBools.ToBitString();
 
             // Assert
             actualStringRepresentation.Should().BeEquivalentTo(expectedStringRepresentation);
@@ -192,7 +191,7 @@ public class ContentConverterTests
             // Act
             var actualBools = ConvertContent.GetBools(this.craftedSaveGame).ToArray();
             var actualReversedBools = ConvertContent.ReverseBitOrderForEachEightElementPack(actualBools).ToArray();
-            var actualReveresedStringResult = ConvertContent.GetStringRepresentation(actualReversedBools);
+            var actualReveresedStringResult = actualReversedBools.ToBitString();
 
             // Assert
             actualReveresedStringResult.Should().BeEquivalentTo(expectedFirstFiveBytes);

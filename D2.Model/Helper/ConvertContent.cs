@@ -71,19 +71,6 @@ public static class ConvertContent
         return result;
     }
 
-    public static string GetStringRepresentation(bool[] inputBools)
-    {
-        if (inputBools.Length == 0)
-        {
-            throw new ArgumentException("Input was empty.");
-        }
-
-        var result = new List<char>();
-        result.AddRange(inputBools.Select(b => b.Equals(true) ? '1' : '0'));
-
-        return string.Concat(result);
-    }
-
     public static IEnumerable<bool[]> GetLsbBoolArraysFromByteWideInts(int[] input)
     {
         var result = new List<bool[]>();

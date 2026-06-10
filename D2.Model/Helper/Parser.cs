@@ -11,27 +11,27 @@ public static class Parser
 
         var lookups = new List<(string Identifier, int Length, string Name)>
         {
-            ("000000000", 10, SaveGameGfTokens.Strength.Name),
-            ("100000000", 10, SaveGameGfTokens.Energy.Name),
-            ("010000000", 10, SaveGameGfTokens.Dexterity.Name),
-            ("110000000", 10, SaveGameGfTokens.Vitality.Name),
-            ("001000000", 10, SaveGameGfTokens.StatusLeft.Name),
-            ("101000000", 08, SaveGameGfTokens.SkillLeft.Name),
-            ("011000000", 21, SaveGameGfTokens.Life.Name),
-            ("111000000", 21, SaveGameGfTokens.LifeMax.Name),
-            ("000100000", 21, SaveGameGfTokens.Mana.Name),
-            ("100100000", 21, SaveGameGfTokens.ManaMax.Name),
-            ("010100000", 21, SaveGameGfTokens.Stamina.Name),
-            ("110100000", 21, SaveGameGfTokens.StaminaMax.Name),
-            ("001100000", 07, SaveGameGfTokens.Level.Name),
-            ("101100000", 32, SaveGameGfTokens.Experience.Name),
-            ("011100000", 25, SaveGameGfTokens.GoldInventory.Name),
-            ("111100000", 25, SaveGameGfTokens.GoldStash.Name)
+            (SaveGameGfTokens.Strength.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Strength.Length, SaveGameGfTokens.Strength.Name),
+            (SaveGameGfTokens.Energy.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Energy.Length, SaveGameGfTokens.Energy.Name),
+            (SaveGameGfTokens.Dexterity.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Dexterity.Length, SaveGameGfTokens.Dexterity.Name),
+            (SaveGameGfTokens.Vitality.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Vitality.Length, SaveGameGfTokens.Vitality.Name),
+            (SaveGameGfTokens.StatusLeft.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.StatusLeft.Length, SaveGameGfTokens.StatusLeft.Name),
+            (SaveGameGfTokens.SkillLeft.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.SkillLeft.Length, SaveGameGfTokens.SkillLeft.Name),
+            (SaveGameGfTokens.Life.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Life.Length, SaveGameGfTokens.Life.Name),
+            (SaveGameGfTokens.LifeMax.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.LifeMax.Length, SaveGameGfTokens.LifeMax.Name),
+            (SaveGameGfTokens.Mana.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Mana.Length, SaveGameGfTokens.Mana.Name),
+            (SaveGameGfTokens.ManaMax.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.ManaMax.Length, SaveGameGfTokens.ManaMax.Name),
+            (SaveGameGfTokens.Stamina.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Stamina.Length, SaveGameGfTokens.Stamina.Name),
+            (SaveGameGfTokens.StaminaMax.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.StaminaMax.Length, SaveGameGfTokens.StaminaMax.Name),
+            (SaveGameGfTokens.Level.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Level.Length, SaveGameGfTokens.Level.Name),
+            (SaveGameGfTokens.Experience.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.Experience.Length, SaveGameGfTokens.Experience.Name),
+            (SaveGameGfTokens.GoldInventory.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.GoldInventory.Length, SaveGameGfTokens.GoldInventory.Name),
+            (SaveGameGfTokens.GoldStash.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.GoldStash.Length, SaveGameGfTokens.GoldStash.Name)
         };
 
         var result = new Dictionary<string, string>();
         var inputTextOffset = 0;
-        foreach( var lookup in lookups)
+        foreach(var lookup in lookups)
         {
             if (inputTextOffset+defaultIdentifierWidth > inputText.Length)
             {

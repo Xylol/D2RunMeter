@@ -17,9 +17,7 @@ public class SaveGame
     {
         this.reversedAllBools = ConvertContent.ReverseEndianess(fileContent).ToArray();
         this.changedDate = changedDate;
-        this.gfPartAsText = string.Concat(ConvertContent.GetStringRepresentation(
-            ConvertContent.ReverseBitOrderForEachEightElementPack(
-                GetGfBooleans()).ToArray()).Skip(widthOfGf));
+        this.gfPartAsText = string.Concat(ConvertContent.ReverseBitOrderForEachEightElementPack(GetGfBooleans()).ToBitString().Skip(widthOfGf));
     }
 
     public string GetSubstringStartingWithAsciiGf()
@@ -27,9 +25,9 @@ public class SaveGame
         var gfAsBools = ConvertContent.GetLsbBoolArraysFromByteWideInts(this.gfCharactersAsHex);
         var gfConcatedBools = ConvertContent.GetLesserDimensionBoolArray(gfAsBools).ToArray();
         var gfReversedBools = ConvertContent.ReverseBitOrderForEachEightElementPack(gfConcatedBools).ToArray();
-        var gfAsText = ConvertContent.GetStringRepresentation(gfReversedBools);
+        var gfAsText = gfReversedBools.ToBitString();
 
-        var reversedBoolsAsText = ConvertContent.GetStringRepresentation(this.reversedAllBools);
+        var reversedBoolsAsText = this.reversedAllBools.ToBitString();
 
         var indexOfGandF = reversedBoolsAsText.IndexOf(gfAsText, StringComparison.Ordinal);
         var result = reversedBoolsAsText.Substring(indexOfGandF);
