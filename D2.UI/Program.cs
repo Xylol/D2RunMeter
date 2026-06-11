@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 
 namespace D2.UI;
 

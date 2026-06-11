@@ -1,4 +1,4 @@
-﻿namespace D2.Model;
+namespace D2.Model;
 
 public static class SaveGameTokens
 {

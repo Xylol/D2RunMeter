@@ -1,4 +1,4 @@
-﻿namespace D2.Model;
+namespace D2.Model;
 // https://pastebin.com/cVTNmGzZ some phrozen keep info in link.
 // Adjusted the info from the link, StatusLeft has length 10 and SkillLeft starts 2 later and has length 8.
 // Life Mana Stamina is unshifted and needs to be /256 to have the right value.

@@ -1,4 +1,4 @@
-﻿using D2.Model.Helper;
+using D2.Model.Helper;
 
 namespace D2.Model;
 

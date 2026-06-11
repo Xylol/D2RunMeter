@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using D2.Model.Helper;
 using NUnit.Framework;
 using FluentAssertions;

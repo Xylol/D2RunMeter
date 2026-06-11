@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using FluentAssertions;
 
 namespace D2.Model.Tests;
