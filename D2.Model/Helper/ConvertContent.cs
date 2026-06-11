@@ -6,24 +6,11 @@ public static class ConvertContent
 {
     private const int BitsPerByte = 8;
 
-    public static IEnumerable<bool> GetBools(BitArray input)
-    {
-        var resultBools = new bool[input.Length];
-        input.CopyTo(resultBools, 0);
-
-        return resultBools;
-    }
-
-    public static IEnumerable<bool> GetBools(byte[] inputBytes)
-    {
-        var inputBitArray = new BitArray(inputBytes);
-
-        return GetBools(inputBitArray);
-    }
+    public static IEnumerable<bool> GetBools(byte[] inputBytes) => new BitArray(inputBytes).Cast<bool>();
 
     public static IEnumerable<bool> GetBools(string inputText)
     {
-        if (!inputText.Any() || inputText.Any(b => !b.Equals('0') && !b.Equals('1')))
+        if (string.IsNullOrEmpty(inputText) || inputText.Any(b => b is not ('0' or '1')))
         {
             throw new ArgumentException($"InputText must contain only 0 or 1 but was '{inputText}'", inputText);
         }
@@ -76,7 +63,7 @@ public static class ConvertContent
         var result = new List<bool[]>();
         foreach (var single in input)
         {
-            result.Add(GetBools([Convert.ToByte(single)]).ToArray());
+            result.Add([.. GetBools([Convert.ToByte(single)])]);
         }
         return result;
     }
@@ -89,7 +76,7 @@ public static class ConvertContent
             result.AddRange(singleArray);
         }
 
-        return result.ToArray();
+        return result;
     }
 
     public static IEnumerable<bool> ReverseEndianess(byte[] inputOrder)
@@ -115,53 +102,25 @@ public static class ConvertContent
             reversedOrderBoolsResult.AddRange(eightReversedOrderBools);
         }
 
-        return reversedOrderBoolsResult.ToArray();
+        return reversedOrderBoolsResult;
     }
 
-    public static IEnumerable<bool> ReverseBitOrderOfExactlyEightElements(bool[] originalOrderInput)
-    {
-        if (!originalOrderInput.Length.Equals(BitsPerByte))
-        {
-            throw new Exception($"Input Array was expected to have 8 elements but was {originalOrderInput.Length}.");
-        }
-
-        var reversedEndianBits = new bool[BitsPerByte];
-        for (var i = 0; i < BitsPerByte; i++)
-        {
-            reversedEndianBits[i] = originalOrderInput[BitsPerByte - 1 - i];
-        }
-        return reversedEndianBits;
-    }
+    public static IEnumerable<bool> ReverseBitOrderOfExactlyEightElements(bool[] originalOrderInput) => originalOrderInput.Reverse();
 
     public static IEnumerable<bool[]> GetBatchesWithEightElements(bool[] inputElements)
     {
         if (inputElements.Length == 0)
         {
-            throw new Exception("Array empty - check this.");
+            throw new ArgumentException("Array empty - check this.", nameof(inputElements));
         }
 
-        var result = new List<bool>();
+        var localElements = inputElements.ToList();
 
-        foreach (var element in inputElements)
+        while (localElements.Count % BitsPerByte != 0)
         {
-            if (result.Count != BitsPerByte)
-            {
-                result.Add(element);
-                continue;
-            }
-
-            yield return result.ToArray();
-            result =
-            [
-                element
-            ];
+            localElements.Add(false);
         }
 
-        while (result.Count != BitsPerByte)
-        {
-            result.Add(false);
-        }
-
-        yield return result.ToArray();
+        return localElements.Chunk(BitsPerByte);
     }
 }

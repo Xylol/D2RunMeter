@@ -75,24 +75,6 @@ public class ContentConverterTests
         }
 
         [Test]
-        public void ToBoolArray_WhenProvidedBitArray_WillReturnLSB()
-        {
-            // Arrange
-            var testByte = new BitArray(new byte[] {76}); // 76 is 0100 1100 in binary
-            var expected = new []
-            {
-                false, false, true, true,
-                false, false, true, false
-            };
-
-            // Act
-            var actual = ConvertContent.GetBools(testByte);
-
-            // Assert
-            actual.Should().BeEquivalentTo(expected);
-        }
-
-        [Test]
         public void CreateBoolArrayListWithEightElementsEach_When14Elements_Assert2PacksAndCorrectOrder()
         {
             // Arrange
