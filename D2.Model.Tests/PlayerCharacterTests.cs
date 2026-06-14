@@ -71,6 +71,8 @@ public class PlayerCharacterTests
         actual.Should().BeEquivalentTo(expected);
     }
 
+    // TODO: no longer asciiGF based, find out what end substring is
+    
     // [Test]
     // public void GetSubstringStartingWithAsciiGF_WhenSaveGameProvided_WeAssertWeGetGFUntilEndSubstring()
     // {
