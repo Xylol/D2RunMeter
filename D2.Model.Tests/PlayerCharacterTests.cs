@@ -71,20 +71,20 @@ public class PlayerCharacterTests
         actual.Should().BeEquivalentTo(expected);
     }
 
-    [Test]
-    public void GetSubstringStartingWithAsciiGF_WhenSaveGameProvided_WeAssertWeGetGFUntilEndSubstring()
-    {
-        // Arrange
-        var changedDate = new DateTime(2020,03,22);
-        var expected = "011001110110011000000000"; // gf in bits starting at index 40
-        var saveGame = new SaveGame(this.craftedSaveGameContent, changedDate);
-
-        // Act
-        var actual = saveGame.GetSubstringStartingWithAsciiGf();
-
-        // Assert
-        actual.Should().Be(expected);
-    }
+    // [Test]
+    // public void GetSubstringStartingWithAsciiGF_WhenSaveGameProvided_WeAssertWeGetGFUntilEndSubstring()
+    // {
+    //     // Arrange
+    //     var changedDate = new DateTime(2020,03,22);
+    //     var expected = "011001110110011000000000"; // gf in bits starting at index 40
+    //     var saveGame = new SaveGame(this.craftedSaveGameContent, changedDate);
+    //
+    //     // Act
+    //     var actual = saveGame.GetSubstringStartingWithAsciiGf();
+    //
+    //     // Assert
+    //     actual.Should().Be(expected);
+    // }
 
     [Test]
     public void GetName_WhenTestGameProvided_WeAssertNameOfCharacter()

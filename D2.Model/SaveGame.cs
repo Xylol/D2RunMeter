@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Reflection;
 using System.Text;
 using D2.Model.Helper;
@@ -6,58 +7,24 @@ namespace D2.Model;
 
 public class SaveGame
 {
-    private readonly int[] gfCharactersAsHex = [0x67, 0x66];
     private const int widthOfGf = 16;
-    private readonly string gfPartAsText;
     private readonly DateTime changedDate;
-    private readonly bool[] reversedAllBools;
+    private readonly bool[] fileContentBools;
+    private readonly bool[] gfPartAsBools;
     private static Dictionary<int, long>? levelExperienceCache;
 
     public SaveGame(byte[] fileContent, DateTime changedDate)
     {
-        this.reversedAllBools = [.. ConvertContent.ReverseEndianess(fileContent)];
         this.changedDate = changedDate;
-        this.gfPartAsText = string.Concat(ConvertContent.ReverseBitOrderForEachEightElementPack(GetGfBooleans()).ToBitString().Skip(widthOfGf));
-    }
-
-    public string GetSubstringStartingWithAsciiGf()
-    {
-        var gfAsBools = ConvertContent.GetLsbBoolArraysFromByteWideInts(this.gfCharactersAsHex);
-        var gfConcatedBools = ConvertContent.GetLesserDimensionBoolArray(gfAsBools).ToArray();
-        var gfReversedBools = ConvertContent.ReverseBitOrderForEachEightElementPack(gfConcatedBools).ToArray();
-        var gfAsText = gfReversedBools.ToBitString();
-
-        var reversedBoolsAsText = this.reversedAllBools.ToBitString();
-
-        var indexOfGandF = reversedBoolsAsText.IndexOf(gfAsText, StringComparison.Ordinal);
-        var result = reversedBoolsAsText[indexOfGandF..];
-
-        return result;
+        bool[] fileContentBools = [.. new BitArray(fileContent).Cast<bool>()];
+        this.fileContentBools = fileContentBools;
+        this.gfPartAsBools = fileContentBools[widthOfGf..];
     }
 
     public Character GetPlayerCharacter()
     {
-        var parsedText = ParseGfValuesFromText(this.gfPartAsText);
-        var stats = new Dictionary<string, long>();
-
-        foreach (var pair in parsedText)
-        {
-            var value = ConvertContent.GetLongFromLittleEndianBools([.. ConvertContent.GetBools(pair.Value)]);
-            stats[pair.Key] = value;
-        }
-        var level = (int)stats.GetValueOrDefault(SaveGameGfTokens.Level.Name, 1);
-
-        return new Character
-        {
-            Name = GetName(),
-            LastChangedAt = changedDate,
-            Level = level,
-            Experience = stats.GetValueOrDefault(SaveGameGfTokens.Experience.Name, 0),
-            NextLevelAtExperience = GetRequiredExperienceForLevel(level + 1),
-            ExperienceRequiredForCurrentLevel = GetRequiredExperienceForLevel(level),
-            GoldInventory = (int)stats.GetValueOrDefault(SaveGameGfTokens.GoldInventory.Name, 0),
-            GoldStash = (int)stats.GetValueOrDefault(SaveGameGfTokens.GoldStash.Name, 0)
-        };
+        var character = ParseGfValuesFromText(this.gfPartAsBools);
+        return character;
     }
 
     private static long GetRequiredExperienceForLevel(int currentLevel)
@@ -95,20 +62,14 @@ public class SaveGame
             .ToDictionary(level => int.Parse(level[0]), experience => long.Parse(experience[1]));
     }
 
-    private bool[] GetGfBooleans()
-    {
-        var gfBitsText = GetSubstringStartingWithAsciiGf();
-        var gfBooleans = ConvertContent.GetBools(gfBitsText).ToArray();
-        return gfBooleans;
-    }
 
     public string GetName()
     {
-        var nameBits = GetValuesForSingleToken(this.reversedAllBools, SaveGameTokens.Name);
-        return GetAsciiFromBool(nameBits);
+        var nameBits = GetValuesForSingleToken(this.fileContentBools, SaveGameTokens.Name);
+        return new string((GetAsciiFromBool(nameBits.Reverse().ToArray())).Reverse().ToArray());
     }
 
-    private static Dictionary<string, string> ParseGfValuesFromText(string inputText)
+    private Character ParseGfValuesFromText(bool[] input)
     {
         const int defaultIdentifierWidth = 9;
 
@@ -132,29 +93,56 @@ public class SaveGame
             (SaveGameGfTokens.GoldStash.BitFieldIdentifier.ToBitString(), SaveGameGfTokens.GoldStash.Length, SaveGameGfTokens.GoldStash.Name)
         };
 
-        var result = new Dictionary<string, string>();
-        var inputTextOffset = 0;
+        var attributeBoolLookup = new Dictionary<string, bool[]>();
+        var inputOffset = 0;
         foreach(var lookup in lookups)
         {
-            if (inputTextOffset + defaultIdentifierWidth > inputText.Length)
+            if (inputOffset + defaultIdentifierWidth > input.Length)
             {
                 break;
             }
 
-            if (inputText[inputTextOffset..(inputTextOffset+defaultIdentifierWidth)] == lookup.Identifier)
+            if (input[inputOffset..(inputOffset+defaultIdentifierWidth)] == ConvertContent.GetBools(lookup.Identifier))
             {
-                if(inputTextOffset + defaultIdentifierWidth + lookup.Length > inputText.Length)
+                if(inputOffset + defaultIdentifierWidth + lookup.Length > input.Length)
                 {
                     throw new InvalidDataException("Identifier successfully matched but not enough data left to get correct value");
                 }
 
-                result.Add(lookup.Name, inputText[(inputTextOffset + defaultIdentifierWidth)..(inputTextOffset + defaultIdentifierWidth + lookup.Length)]);
-                inputTextOffset += defaultIdentifierWidth + lookup.Length;
+                attributeBoolLookup.Add(lookup.Name, input[(inputOffset + defaultIdentifierWidth)..(inputOffset + defaultIdentifierWidth + lookup.Length)]);
+                inputOffset += defaultIdentifierWidth + lookup.Length;
             }
         }
 
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(attributeBoolLookup));
+
+
+        Func<bool[], int> GetIntFromBools = bits => bits.Aggregate(0, (acc, bit) => (acc << 1) | (bit ? 1 : 0));
+        Func<bool[], int> GetLongFromBools = bits => bits.Aggregate(0, (acc, bit) => (acc << 1) | (bit ? 1 : 0));
+        var level = GetIntFromBools(attributeBoolLookup[SaveGameGfTokens.Level.Name]);
+        var experience = GetLongFromBools(attributeBoolLookup[SaveGameGfTokens.Experience.Name]);
+
+        var goldInventory = GetIntFromBools(attributeBoolLookup[SaveGameGfTokens.GoldInventory.Name]);
+        var goldStash = GetIntFromBools(attributeBoolLookup[SaveGameGfTokens.GoldStash.Name]);
+
+        var result = new Character
+        {
+            Name = GetName(),
+            LastChangedAt = changedDate,
+            Level = level,
+            //todo fix long
+            Experience = experience, 
+            NextLevelAtExperience = GetRequiredExperienceForLevel(level + 1),
+            ExperienceRequiredForCurrentLevel = GetRequiredExperienceForLevel(level),
+            GoldInventory = goldInventory,
+            GoldStash = goldStash 
+        };
+
         return result;
     }
+
+
+
 
     private static bool[] GetValuesForSingleToken(bool[] input, ParserToken parserToken) 
         => input[parserToken.Index..(parserToken.Index+parserToken.Length)];
