@@ -42,13 +42,6 @@ public static class ConvertContent
 
     public static long GetLongFromLittleEndianBools(bool[] input)
     {
-        //  TODO: fix larger than 8 bit calculations this might be related to a few bugs.
-        //  Calculation of SaveGames where differing from PK and where byte shifts are needed might be related to this.
-        //if (input.Length == 0 || input.Length > 8)
-        //{
-        //    throw new Exception("Input array should not be empty or longer than 8 elements.");
-        //}
-
         var result = 0L;
         for (var i = 0; i < input.Length; i++)
         {
@@ -57,55 +50,6 @@ public static class ConvertContent
 
         return result;
     }
-
-    public static IEnumerable<bool[]> GetLsbBoolArraysFromByteWideInts(int[] input)
-    {
-        var result = new List<bool[]>();
-        foreach (var single in input)
-        {
-            result.Add([.. GetBools([Convert.ToByte(single)])]);
-        }
-        return result;
-    }
-
-    public static IEnumerable<bool> GetLesserDimensionBoolArray(IEnumerable<bool[]> inputBoolCollection)
-    {
-        var result = new List<bool>();
-        foreach (var singleArray in inputBoolCollection)
-        {
-            result.AddRange(singleArray);
-        }
-
-        return result;
-    }
-
-    public static IEnumerable<bool> ReverseEndianess(byte[] inputOrder)
-    {
-        return ReverseBitOrderForEachEightElementPack(GetBools(inputOrder).ToArray());
-    }
-
-    public static IEnumerable<bool> ReverseBitOrderForEachEightElementPack(bool[] originalOrderBools)
-    {
-        ArgumentNullException.ThrowIfNull(originalOrderBools);
-
-        if (originalOrderBools.Length % BitsPerByte != 0)
-        {
-            throw new Exception($"The provided input is not dividable by eight, its length is {originalOrderBools.Length}.");
-        }
-
-        var batchesWithEightElements = GetBatchesWithEightElements(originalOrderBools);
-        var reversedOrderBoolsResult = new List<bool>();
-
-        foreach (var batch in batchesWithEightElements)
-        {
-            var eightReversedOrderBools = ReverseBitOrderOfExactlyEightElements(batch);
-            reversedOrderBoolsResult.AddRange(eightReversedOrderBools);
-        }
-
-        return reversedOrderBoolsResult;
-    }
-
-    public static IEnumerable<bool> ReverseBitOrderOfExactlyEightElements(bool[] originalOrderInput) => originalOrderInput.Reverse();
 
     public static IEnumerable<bool[]> GetBatchesWithEightElements(bool[] inputElements)
     {

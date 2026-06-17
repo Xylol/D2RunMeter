@@ -7,7 +7,9 @@ namespace D2.Model;
 
 public class SaveGame
 {
-    private const int widthOfGf = 16;
+    private readonly (int g, int f) gfCharactersAsHex = (g: 0x67, f: 0x66);
+    private const int WidthOfGf = 2;
+    private const int BitsPerByte = 8;
     private readonly DateTime changedDate;
     private readonly bool[] fileContentBools;
     private readonly bool[] gfPartAsBools;
@@ -16,14 +18,16 @@ public class SaveGame
     public SaveGame(byte[] fileContent, DateTime changedDate)
     {
         this.changedDate = changedDate;
-        bool[] fileContentBools = [.. new BitArray(fileContent).Cast<bool>()];
-        this.fileContentBools = fileContentBools;
-        this.gfPartAsBools = fileContentBools[widthOfGf..];
+        bool[] contentBools = [.. new BitArray(fileContent).Cast<bool>()];
+        this.fileContentBools = contentBools;
+
+        var startOfGfSection = GetPositionOfGfCharactersFromSavegame(fileContent);
+        this.gfPartAsBools = contentBools[((startOfGfSection + WidthOfGf) * BitsPerByte) ..];
     }
 
     public Character GetPlayerCharacter()
     {
-        var character = ParseGfValuesFromText(this.gfPartAsBools);
+        var character = ParseGfValues(this.gfPartAsBools);
         return character;
     }
 
@@ -43,8 +47,7 @@ public class SaveGame
         var assembly = Assembly.GetExecutingAssembly();
         const string resourceName = "D2.Model.LevelExperienceMapping.ssv";
 
-        using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new Exception($"Embedded resource '{resourceName}' not found");
+        using var stream = assembly.GetManifestResourceStream(resourceName) ?? throw new Exception($"Embedded resource '{resourceName}' not found");
         using var reader = new StreamReader(stream);
 
         var lines = new List<string>();
@@ -66,10 +69,25 @@ public class SaveGame
     public string GetName()
     {
         var nameBits = GetValuesForSingleToken(this.fileContentBools, SaveGameTokens.Name);
-        return new string((GetAsciiFromBool(nameBits.Reverse().ToArray())).Reverse().ToArray());
+        return new string(GetAsciiFromBool(nameBits));
     }
 
-    private Character ParseGfValuesFromText(bool[] input)
+    private int GetPositionOfGfCharactersFromSavegame(byte[] savegameBytes)
+    {
+        for (var i = 0; i < savegameBytes.Length - 1; i++)
+        {
+            var current = savegameBytes[i];
+            var next = savegameBytes[i+1];
+            if (current == gfCharactersAsHex.g && next == gfCharactersAsHex.f)
+            {
+                return i;
+            }
+
+        }
+        throw new Exception("Malformed Savegame, no gf");
+    }
+
+    private Character ParseGfValues(bool[] input)
     {
         const int defaultIdentifierWidth = 9;
 
@@ -102,7 +120,8 @@ public class SaveGame
                 break;
             }
 
-            if (input[inputOffset..(inputOffset+defaultIdentifierWidth)] == ConvertContent.GetBools(lookup.Identifier))
+            var inputIdentifierPart = input[inputOffset..(inputOffset + defaultIdentifierWidth)];
+            if (inputIdentifierPart.SequenceEqual(ConvertContent.GetBools(lookup.Identifier)))
             {
                 if(inputOffset + defaultIdentifierWidth + lookup.Length > input.Length)
                 {
@@ -114,43 +133,41 @@ public class SaveGame
             }
         }
 
-        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(attributeBoolLookup));
+        // stats with value 0 are not in stream so if something missing set 0
+        long ReadValue(string name) => attributeBoolLookup.TryGetValue(name, out var bits)
+            ? ConvertContent.GetLongFromLittleEndianBools(bits)
+            : 0L;
 
-
-        Func<bool[], int> GetIntFromBools = bits => bits.Aggregate(0, (acc, bit) => (acc << 1) | (bit ? 1 : 0));
-        Func<bool[], int> GetLongFromBools = bits => bits.Aggregate(0, (acc, bit) => (acc << 1) | (bit ? 1 : 0));
-        var level = GetIntFromBools(attributeBoolLookup[SaveGameGfTokens.Level.Name]);
-        var experience = GetLongFromBools(attributeBoolLookup[SaveGameGfTokens.Experience.Name]);
-
-        var goldInventory = GetIntFromBools(attributeBoolLookup[SaveGameGfTokens.GoldInventory.Name]);
-        var goldStash = GetIntFromBools(attributeBoolLookup[SaveGameGfTokens.GoldStash.Name]);
+        var level = (int) ReadValue(SaveGameGfTokens.Level.Name);
+        var experience = ReadValue(SaveGameGfTokens.Experience.Name);
+        var goldInventory = (int) ReadValue(SaveGameGfTokens.GoldInventory.Name);
+        var goldStash = (int) ReadValue(SaveGameGfTokens.GoldStash.Name);
 
         var result = new Character
         {
             Name = GetName(),
             LastChangedAt = changedDate,
             Level = level,
-            //todo fix long
-            Experience = experience, 
+            Experience = experience,
             NextLevelAtExperience = GetRequiredExperienceForLevel(level + 1),
             ExperienceRequiredForCurrentLevel = GetRequiredExperienceForLevel(level),
             GoldInventory = goldInventory,
-            GoldStash = goldStash 
+            GoldStash = goldStash
         };
 
         return result;
     }
-
-
-
-
+    
     private static bool[] GetValuesForSingleToken(bool[] input, ParserToken parserToken) 
         => input[parserToken.Index..(parserToken.Index+parserToken.Length)];
 
     private static string GetAsciiFromBool(bool[] input)
     {
-        var nameNumbers = ConvertContent.GetNumbersFromMSB(input);
-        var nameBytes = nameNumbers.Select(n => BitConverter.GetBytes(n).First()).ToArray();
+        var bits = new BitArray(input);
+        // do not cut bytes
+        var nameBytes = new byte[(int)Math.Ceiling(input.Length/8.0)];
+        bits.CopyTo(nameBytes, 0);
+        
         var nameString = Encoding.ASCII.GetString(nameBytes).Trim('\0');
         return nameString ?? throw new Exception("Name is null");
     }

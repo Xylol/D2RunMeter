@@ -1,13 +1,9 @@
 namespace D2.Model;
-// https://pastebin.com/cVTNmGzZ some phrozen keep info in link.
-// Adjusted the info from the link, StatusLeft has length 10 and SkillLeft starts 2 later and has length 8.
-// Life Mana Stamina is unshifted and needs to be /256 to have the right value.
+// https://pastebin.com/cVTNmGzZ some phrozen keep info in link, but it is not fully right.
+// Adjusted the info from the link, StatusLeft has length 10 and SkillLeft starts 2 later and has length 8 (link has those two swapped).
+// Life Mana Stamina + their max (id 6-11) are 21 bit fixed point, the low 8 bits are fractional, so /256 for the real value. link does not mention this, only Level/Exp/Gold are plain ints.
 
-// TODO: check if stuff is left out when value is 0, i guess key and value disappear in those cases.
-// status left, skill left can be the reason of those issues.
-
-
-// TODO: Changing Level order helper but for Experience not, not yet clear what is going on.
+// Confirmed: stats with value 0 are left out, key and value both disappear (rasan has no stat/skill left, testnec no gold). a missing id just means 0.
 public static class SaveGameGfTokens
 {
     public static readonly ParserToken Strength = new(25, 10, "Strength", "000000000");
@@ -24,11 +20,9 @@ public static class SaveGameGfTokens
     public static readonly ParserToken Stamina = new(257, 21, "Stamina", "010100000");
     public static readonly ParserToken StaminaMax = new(287, 21, "StaminaMax", "110100000");
 
-    // public static readonly ParserToken Level = new(317, 7, "Level", "001100000");
-    public static readonly ParserToken Level = new(317, 7, "Level", "000001100");
+    public static readonly ParserToken Level = new(317, 7, "Level", "001100000");
 
-    // public static readonly ParserToken Experience = new(333, 32, "Experience", "101100000");
-    public static readonly ParserToken Experience = new(333, 32, "Experience", "000001101");
+    public static readonly ParserToken Experience = new(333, 32, "Experience", "101100000");
 
     // TODO: solve the gold issue, instead 0 in test it is 104868.
     public static readonly ParserToken GoldInventory = new(374, 25, "GoldInventory", "011100000");

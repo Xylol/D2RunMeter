@@ -20,29 +20,6 @@ public class ContentConverterTests
         }
 
         [Test]
-        public void ReverseEightBitPacks_InputingRawGameBytes_GettingReversedAndRealOrder()
-        {
-            // Arrange
-            var expected = new[]
-            {
-                false, true, false, true, false, true, false, true, //0101 0101 0x55
-                true, false, true, false, true, false, true, false, //1010 1010 0xAA
-                false, true, false, true, false, true, false, true, //0101 0101 0x55
-                true, false, true, false, true, false, true, false, //1010 1010 0xAA
-                false, false, false, false, false, false, false, false, //0000 0000 0x00
-                false, true, true, false, false, true, true, true, //0110 0111 0x67
-                false, true, true, false, false, true, true, false, //0110 0110 0x66
-                false, false, false, false, false, false, false, false //0000 0000 0x00
-            };
-
-            // Act
-            var actualBitArray = ConvertContent.ReverseEndianess(this.craftedSaveGame);
-
-            // Assert
-            actualBitArray.Should().BeEquivalentTo(expected);
-        }
-
-        [Test]
         public void GetStringRepresentationFromBitArray_WhenTransforming_AssertsString()
         {
             // Arrange
@@ -116,83 +93,6 @@ public class ContentConverterTests
 
             // Assert
             actual.Should().BeEquivalentTo(expected);
-        }
-
-        [Test]
-        public void ReverseBitOrderOfEightElements_When8ElementsProvided_AssertReversed()
-        {
-            // Arrange
-            var testElements = new[] {true, true, false, true, false, true, true, true}; // 1101 0111
-            var expected = new[] {true, true, true, false, true, false, true, true}; // 1110 1011
-
-            // Act
-            var actual = ConvertContent.ReverseBitOrderOfExactlyEightElements(testElements);
-
-            // Assert
-            actual.Should().BeEquivalentTo(expected);
-        }
-
-        [Test]
-        public void ReverseBitOrderForEachEightElementPack_When2PacksProvided_AssertEachPackReversed()
-        {
-            // Arrange
-            var testPack = new []
-            {
-                true, true, true, true, false, false, false, false,
-                false, true, true, false, false, true, false, true
-            }; // 1111 0000 0110 0101
-            var expected = new[]
-            {
-                false, false, false, false, true, true, true, true,
-                true, false, true, false, false, true, true, false
-            };
-
-            // Act
-            var actual = ConvertContent.ReverseBitOrderForEachEightElementPack(testPack);
-
-            // Assert
-            actual.Should().BeEquivalentTo(expected);
-        }
-
-        [Test]
-        public void WhenWeLoad_SaveGameFromFile_WeAssertTheStringRepresentationOfBits()
-        {
-
-            // TODO: verify the true bit sequence as written by the game to the saveGame file.
-            // Arrange
-            var expectedFirstFiveBytes =
-                "0101"+"0101"+ // 0x55
-                "1010"+"1010"+ // 0xAA
-                "0101"+"0101"+ // 0x55
-                "1010"+"1010"+ // 0xAA
-                "0000"+"0000"+ // 0x00
-                "0110"+"0111"+ // 0x67
-                "0110"+"0110"+ // 0x66
-                "0000"+"0000"; // 0x00
-
-            // Act
-            var actualBools = ConvertContent.GetBools(this.craftedSaveGame).ToArray();
-            var actualReversedBools = ConvertContent.ReverseBitOrderForEachEightElementPack(actualBools).ToArray();
-            var actualReveresedStringResult = actualReversedBools.ToBitString();
-
-            // Assert
-            actualReveresedStringResult.Should().BeEquivalentTo(expectedFirstFiveBytes);
-        }
-
-        [Test]
-        public void GetBoolsFromHex_WhenSingleHexProvided_WeAssertBools()
-        {
-            // Arrange
-            var input = 0x67; // ascii g
-            var expected = new[] {false, true, true, false, false, true, true, true}; //0110 0111
-
-            // Act
-            var actual = ConvertContent.GetLsbBoolArraysFromByteWideInts([input]);
-            var actualConcated = ConvertContent.GetLesserDimensionBoolArray(actual).ToArray();
-            var reversedActual = ConvertContent.ReverseBitOrderForEachEightElementPack(actualConcated);
-
-            // Assert
-            expected.Should().BeEquivalentTo(reversedActual);
         }
 
         [Test]
