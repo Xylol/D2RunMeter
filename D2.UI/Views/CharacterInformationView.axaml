@@ -12,16 +12,18 @@
                     Spacing="{StaticResource SpacingTiny}">
 
             <!-- Character Header -->
-            <Border BorderBrush="{DynamicResource SystemAccentColor}"
-                    BorderThickness="0,0,0,2"
-                    Padding="{StaticResource MarginBottomSmall}"
-                    Margin="{StaticResource MarginBottomSmall}">
-                <TextBlock Classes="Title">
-                    <Run Text="{Binding CharacterName}"/>
-                    <Run Text=" Lvl "/>
-                    <Run Text="{Binding CharacterLevel}"/>
-                </TextBlock>
-            </Border>
+            <TextBlock Classes="Title"
+                       Margin="{StaticResource MarginBottomTiny}">
+                <Run Text="{Binding CharacterName}"/>
+                <Run Text=" Lvl "/>
+                <Run Text="{Binding CharacterLevel}"/>
+            </TextBlock>
+
+            <Button Content="Back to Menu"
+                    Command="{Binding BackCommand}"
+                    Classes="SmallButton"
+                    HorizontalAlignment="Center"
+                    Margin="{StaticResource MarginBottomSmall}"/>
 
             <!-- Stats Cards -->
             <Border Classes="StatsCard">
@@ -85,11 +87,6 @@
                        Opacity="0.5"
                        HorizontalAlignment="Center"
                        Margin="{StaticResource MarginVerticalSmall}"/>
-
-            <Button Content="Reset &amp; Main Menu"
-                    Command="{Binding BackCommand}"
-                    Classes="MenuButton"
-                    Margin="{StaticResource MarginTopMedium}"/>
         </StackPanel>
     </ScrollViewer>
 

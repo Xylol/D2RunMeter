@@ -6,6 +6,8 @@
 
 A real-time statistics tracker for Diablo 2 characters. Monitors experience, gold, runs, and provides level-up estimates by parsing save game files.
 
+**Game version:** 1.12 only — the rare rune era.
+
 ## Screenshots
 
 ![D2RunMeter UI](Example.png)
