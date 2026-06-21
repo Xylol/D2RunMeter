@@ -13,7 +13,7 @@ public class SaveGame
     private readonly DateTime changedDate;
     private readonly bool[] fileContentBools;
     private readonly bool[] gfPartAsBools;
-    private static Dictionary<int, long>? levelExperienceCache;
+    private static Lazy<Dictionary<int, long>> levelExperienceCache = new (LoadLevelExperienceMappingFromEmbeddedResource());
 
     public SaveGame(byte[] fileContent, DateTime changedDate)
     {
@@ -31,23 +31,16 @@ public class SaveGame
         return character;
     }
 
-    private static long GetRequiredExperienceForLevel(int currentLevel)
-    {
-        if (levelExperienceCache == null)
-        {
-            LoadLevelExperienceMappingFromEmbeddedResource();
-        }
+    private static long GetRequiredExperienceForLevel(int currentLevel) => levelExperienceCache.Value[currentLevel];
 
-        return levelExperienceCache![currentLevel];
-    }
-
-    private static void LoadLevelExperienceMappingFromEmbeddedResource()
+    private static Dictionary<int,long> LoadLevelExperienceMappingFromEmbeddedResource()
     {
         const int countOfHeaderRows = 1;
         var assembly = Assembly.GetExecutingAssembly();
         const string resourceName = "D2.Model.LevelExperienceMapping.ssv";
 
-        using var stream = assembly.GetManifestResourceStream(resourceName) ?? throw new Exception($"Embedded resource '{resourceName}' not found");
+        using var stream = assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Embedded resource '{resourceName}' not found");
         using var reader = new StreamReader(stream);
 
         var lines = new List<string>();
@@ -60,9 +53,9 @@ public class SaveGame
             }
         }
 
-        levelExperienceCache = lines.Skip(countOfHeaderRows)
+        return lines.Skip(countOfHeaderRows)
             .Select(line => line.Split(';'))
-            .ToDictionary(level => int.Parse(level[0]), experience => long.Parse(experience[1]));
+            .ToDictionary(parts => int.Parse(parts[0]), parts => long.Parse(parts[1]));
     }
 
 
@@ -84,7 +77,7 @@ public class SaveGame
             }
 
         }
-        throw new Exception("Malformed Savegame, no gf");
+        throw new InvalidDataException("Malformed savegame: 'gf' marker not found");
     }
 
     private Character ParseGfValues(bool[] input)
@@ -157,7 +150,7 @@ public class SaveGame
 
         return result;
     }
-    
+
     private static bool[] GetValuesForSingleToken(bool[] input, ParserToken parserToken) 
         => input[parserToken.Index..(parserToken.Index+parserToken.Length)];
 
@@ -167,8 +160,7 @@ public class SaveGame
         // do not cut bytes
         var nameBytes = new byte[(int)Math.Ceiling(input.Length/8.0)];
         bits.CopyTo(nameBytes, 0);
-        
-        var nameString = Encoding.ASCII.GetString(nameBytes).Trim('\0');
-        return nameString ?? throw new Exception("Name is null");
+
+        return Encoding.ASCII.GetString(nameBytes).Trim('\0');
     }
 }

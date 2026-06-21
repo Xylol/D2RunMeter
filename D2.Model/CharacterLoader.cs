@@ -26,7 +26,7 @@ public class CharacterDataLoader(string characterLocation, IContentLoader conten
 
             if (attemptCounter >= MaximumLoadingAttempts)
             {
-                throw new Exception("Character was changed too fast between loads. This should not happen.");
+                throw new IOException($"Character file '{characterLocation}' kept changing across {MaximumLoadingAttempts} read attempts");
             }
 
             attemptCounter++;
